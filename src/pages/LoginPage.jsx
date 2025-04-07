@@ -8,12 +8,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const { user, login } = useAuth();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(username, password, navigate);
-    console.log(user);
+    const loginsuccess = await login(username, password);
+    if(loginsuccess){
+      navigate("/");
+    }else{
+      console.log("Error de login");
+    }
+
   };
 
   return (

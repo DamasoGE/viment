@@ -1,15 +1,15 @@
 import { createContext, useState } from "react";
 
-const AuthContext =createContext();
+const AuthContext = createContext();
 const api = import.meta.env.VITE_BACKEND_API;
 
 export function AuthProvider({children}){
     const [isAuth, setIsAuth] = useState(false);
     const [user, setUser] = useState(localStorage.getItem("user"));
 
-    const login = async (username, password, navigate) =>{
+    const login = async (username, password) =>{
       try {
-        const response = await fetch(`${api}/auth/login`, {
+        const response = await fetch(`${api}/authseller/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -19,19 +19,20 @@ export function AuthProvider({children}){
         if(data.auth){
           setIsAuth(data.auth);
           setUser(username);
-          navigate("/");
           localStorage.setItem("user", username)
+          return true;
         }else{
           console.log("Login failed");
+          return false;
         }
       } catch (error) {
         console.log("Error: ", error);
       }
     }
 
-    const logout = async (navigate) =>{
+    const logout = async () =>{
       try {
-          const response = await fetch(`${api}/auth/logout`, {
+          const response = await fetch(`${api}/authseller/logout`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -45,15 +46,16 @@ export function AuthProvider({children}){
           const data = await response.json();
           setIsAuth(data.auth);
           localStorage.removeItem("user")
-          navigate("/login");
+          return true;
         } catch (error) {
           console.log("Error: ", error);
+          return false;
     }
   }
 
     const checkAuth = async () =>{
         try {
-            const response = await fetch(`${api}/auth/check-auth`, {
+            const response = await fetch(`${api}/authseller/check-auth`, {
               method: 'GET',
               credentials: 'include',
               headers: {
