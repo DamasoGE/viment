@@ -1,16 +1,15 @@
-import { useState } from "react";
-import "./LoginPage.css";
+import React, { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+const LoginPage: React.FC = () => {
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const navigate = useNavigate();
 
   const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const loginsuccess = await login(username, password);
     if(loginsuccess){
@@ -29,7 +28,7 @@ export default function LoginPage() {
           <div className="form-group">
             <label>Username</label>
             <input
-              type="username"
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -52,3 +51,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default LoginPage;
