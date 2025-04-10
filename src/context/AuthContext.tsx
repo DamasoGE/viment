@@ -27,7 +27,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // 5. La función de login
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${api}/authseller/login`, {
+      const response = await fetch(`${api}/authasesor/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // 6. La función de logout
   const logout = async (): Promise<boolean> => {
     try {
-      const response = await fetch(`${api}/authseller/logout`, {
+      const response = await fetch(`${api}/authasesor/logout`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -65,6 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       const data = await response.json();
       setIsAuth(data.auth);
+      setUser(null);
       localStorage.removeItem("user");
       return true;
     } catch (error) {
@@ -76,7 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // 7. La función de checkAuth
   const checkAuth = async (): Promise<boolean> => {
     try {
-      const response = await fetch(`${api}/authseller/check-auth`, {
+      const response = await fetch(`${api}/authasesor/check-auth`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -89,7 +90,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       const data = await response.json();
       setIsAuth(data.auth);
-      return true;
+
+      return data.auth;
     } catch (error) {
       return false;
       console.log("Error: ", error);
