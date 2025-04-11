@@ -9,22 +9,10 @@ const { Sider } = Layout;
 
 const SiderBar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [logged, setLogged] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string>('');
-  const { checkAuth } = useAuth();
+  const { isAuth } = useAuth();
   const location = useLocation();
 
-  useEffect(() => {
-    const aux = async () => {
-      const isAuth = await checkAuth();
-      console.log(isAuth);
-      setLogged(isAuth);
-      setSelectedKey('');
-    };
-
-    aux();
-    
-  }, [checkAuth])
 
   useEffect(() => {
     // Se actualiza la key seleccionada en base a la ruta actual
@@ -43,7 +31,7 @@ const SiderBar: React.FC = () => {
     setCollapsed(!collapsed);
   };
 
-  const menuItems = logged ? [
+  const menuItems = isAuth ? [
     {
       key: '1',
       icon: <UserOutlined />,

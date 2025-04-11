@@ -8,8 +8,9 @@ const { Header } = Layout;
 const { Title } = Typography;
 
 const HeaderBar: React.FC = () => {
-  const navigate = useNavigate(); // Hook para redirigir después del logout
-  const { logout, user } = useAuth(); // Suponiendo que user es el nombre del usuario logueado
+  const navigate = useNavigate();
+  const { logout, user, isAuth } = useAuth();
+  
 
   const handleLogout = async () => {
     const logoutsuccess = await logout();
@@ -21,27 +22,28 @@ const HeaderBar: React.FC = () => {
   };
 
   return (
-    <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Header style={{ height:"50px" ,display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <Title level={3} style={{ color: 'white', margin: 0 }}>
         <Link to="/" style={{ color: "white", textDecoration: "none" }}>VIMENT</Link>
       </Title>
 
       {/* Mostrar nombre de usuario y botón de logout */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        {user ? (
+        {user && isAuth ? (
           <>
             <IdcardOutlined style={{ color: 'white' }} />
             <Typography.Text style={{ color: 'white', marginRight: '20px', marginLeft: '5px' }}>
               {user ? (`${user}`) : ''}
             </Typography.Text>
+            <Button type="primary" onClick={handleLogout}>
+              Logout
+            </Button>
           </>
         ):(
           <></>
         )}
 
-        <Button type="primary" onClick={handleLogout}>
-          Logout
-        </Button>
+
       </div>
     </Header>
   );

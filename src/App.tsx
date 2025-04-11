@@ -1,20 +1,16 @@
-import { RouterProvider } from "react-router-dom";
-import { router } from "./routes/router";
+import { BrowserRouter } from "react-router-dom"; // Importa BrowserRouter
 import { AuthProvider } from './context/AuthContext';
-import './App.css'
+import RouterLayout from "./routes/RouterLayout";
+import './App.css';
 
 const App: React.FC = () => {
   return (
-    
-    <>
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
-    </>
-
-  )
+    <BrowserRouter>
+      <AuthProvider>
+        <RouterLayout />
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
-
-
 
 export default App;
