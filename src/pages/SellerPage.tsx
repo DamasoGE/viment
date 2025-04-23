@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Table, Space } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
-import useSeller, { Seller } from '../hooks/useSeller'; // Importa el hook que has creado
+import useSeller, { Seller } from '../hooks/useSeller';
 import { ColumnsType } from 'antd/es/table';
 
 const SellerPage: React.FC = () => {

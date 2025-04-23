@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import useSeller from '../hooks/useSeller'; // Asegúrate de importar el hook
+import useSeller from '../hooks/useSeller'; 
 
 const NewSellerPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Obtener la función createSeller del hook useSeller
+
   const { createSeller } = useSeller();
 
   const onFinish = async (values: { username: string; dni: string }) => {

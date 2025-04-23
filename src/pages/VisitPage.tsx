@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Table, Space } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
-import useVisit, { Visit } from '../hooks/useVisit'; // Importa el hook para visitas
+import useVisit, { Visit } from '../hooks/useVisit';
 import { ColumnsType } from 'antd/es/table';
 
 const VisitPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
 
-  const { visits, loading, error } = useVisit(); // Hook que obtiene las visitas
+  const { visits, loading, error } = useVisit();
 
   const [visitFilter, setVisitFilter] = useState<Visit[]>([]);
 
   useEffect(() => {
     if (searchTerm) {
       const filtered = visits.filter((visit) =>
-        visit.property?.address.toLowerCase().includes(searchTerm.toLowerCase()) || // Filtrar por propiedad
-        (visit.status?.toLowerCase().includes(searchTerm.toLowerCase())) // Filtrar por estado
+        visit.property?.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (visit.status?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setVisitFilter(filtered);
     } else {
@@ -29,7 +29,7 @@ const VisitPage: React.FC = () => {
       title: 'Cita',
       dataIndex: 'appointment',
       key: 'appointment',
-      render: (appointment: Date) => new Date(appointment).toLocaleString(), // Mostrar fecha y hora
+      render: (appointment: Date) => new Date(appointment).toLocaleString(), 
     },
     {
       title: 'Propiedad',
@@ -49,7 +49,7 @@ const VisitPage: React.FC = () => {
       title: 'Estado',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => <span>{status}</span>, // Mostrar el estado de la visita
+      render: (status: string) => <span>{status}</span>, 
     },
     {
       title: 'Acciones',

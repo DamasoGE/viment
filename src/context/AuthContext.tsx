@@ -1,6 +1,5 @@
 import React, { createContext, useState, ReactNode } from "react";
 
-// 1. Definimos los tipos para el contexto
 export interface AuthContextType {
   user: string | null;
   isAuth: boolean;
@@ -9,22 +8,20 @@ export interface AuthContextType {
   checkAuth: () => Promise<boolean>;
 }
 
-// 2. Inicializamos el contexto con un valor por defecto vacío
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const api = import.meta.env.VITE_BACKEND_API;
 
-// 3. El tipo de las props del provider
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // 4. Tipamos los estados
+
   const [isAuth, setIsAuth] = useState<boolean>(false);
   const [user, setUser] = useState<string | null>(localStorage.getItem("user"));
 
-  // 5. La función de login
+
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       const response = await fetch(`${api}/authasesor/login`, {
@@ -49,7 +46,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // 6. La función de logout
   const logout = async (): Promise<boolean> => {
     try {
       const response = await fetch(`${api}/authasesor/logout`, {
@@ -74,7 +70,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // 7. La función de checkAuth
   const checkAuth = async (): Promise<boolean> => {
     try {
       const response = await fetch(`${api}/authasesor/check-auth`, {
@@ -93,8 +88,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return data.auth;
     } catch (error) {
-      return false;
       console.log("Error: ", error);
+      return false;
+
     }
   };
 

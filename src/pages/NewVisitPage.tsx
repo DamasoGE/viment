@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button, DatePicker, Select, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import useProperty from '../hooks/useProperty'; // Importa el hook para propiedades
-import useVisit from '../hooks/useVisit'; // Importa el hook para visitas
+import useProperty from '../hooks/useProperty';
+import useVisit from '../hooks/useVisit'; 
 
 const { Option } = Select;
 
@@ -10,20 +10,20 @@ const NewVisitPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { properties } = useProperty(); // Obtén las propiedades desde el hook
-  const { createVisit } = useVisit(); // Obtén la función para crear visitas
+  const { properties } = useProperty();
+  const { createVisit } = useVisit();
 
-  // Función que se ejecuta al enviar el formulario
+
   const onFinish = async (values: { appointment: string; propertyId: string }) => {
     setLoading(true);
 
-    // Convertir la fecha a formato ISO 8601 si no está en ese formato
+
     const appointmentISO = new Date(values.appointment);
 
     try {
       await createVisit(appointmentISO, values.propertyId);
       message.success('Visita creada con éxito');
-      navigate('/visit'); // Redirigir a la página de visitas
+      navigate('/visit');
     } catch (error) {
       message.error('Error al crear la visita');
       console.error('Error:', error);
@@ -42,7 +42,7 @@ const NewVisitPage: React.FC = () => {
         initialValues={{ appointment: '', propertyId: '' }}
         style={{ maxWidth: 400, margin: 'auto' }}
       >
-        {/* Campo para seleccionar la propiedad */}
+
         <Form.Item
           label="Propiedad"
           name="propertyId"
@@ -57,7 +57,6 @@ const NewVisitPage: React.FC = () => {
           </Select>
         </Form.Item>
 
-        {/* Campo para seleccionar la fecha de la cita */}
         <Form.Item
           label="Fecha de la Cita"
           name="appointment"
@@ -71,7 +70,6 @@ const NewVisitPage: React.FC = () => {
           />
         </Form.Item>
 
-        {/* Botón para crear la visita */}
         <Form.Item>
           <Button
             type="primary"

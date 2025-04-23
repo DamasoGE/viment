@@ -27,7 +27,6 @@ const HeaderBar: React.FC = () => {
         <Link to="/" style={{ color: "white", textDecoration: "none" }}>VIMENT</Link>
       </Title>
 
-      {/* Mostrar nombre de usuario y botón de logout */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {user && isAuth ? (
           <>

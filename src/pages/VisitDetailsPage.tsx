@@ -2,27 +2,21 @@ import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Card, Descriptions, Divider, Result, Button, Spin, Form, Input } from 'antd';
 import useVisit from '../hooks/useVisit'; // Asegúrate de importar el hook adecuado
-import useProperty from '../hooks/useProperty'; // Para mostrar la propiedad asociada a la visita
 
 const VisitDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { visits, loading: visitLoading, addCommentToVisit } = useVisit();
-  const { properties } = useProperty(); // Obtener las propiedades
+  const { visits, loading: visitLoading, updateVisit } = useVisit();
   const [submitting, setSubmitting] = useState(false);
 
   const visit = useMemo(() => {
     return visits.find((v) => v._id === id) || null;
   }, [visits, id]);
 
-  const property = useMemo(() => {
-    return visit ? properties.find((p) => p._id === visit.property._id) : null;
-  }, [visit, properties]);
-
   if (visitLoading) {
     return (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
           <Spin tip="Cargando visita...">
-            <div style={{ width: 200, height: 100 }} /> {/* Esto activa el tip */}
+            <div style={{ width: 200, height: 100 }} />
           </Spin>
         </div>
       );
@@ -42,6 +36,7 @@ const VisitDetailsPage: React.FC = () => {
       />
     );
   }
+  
 
   return (
     <div style={{ padding: 24 }}>
@@ -53,10 +48,12 @@ const VisitDetailsPage: React.FC = () => {
           <Descriptions.Item label="Fecha de la Cita">
             {new Date(visit.appointment).toLocaleString()}
           </Descriptions.Item>
+
           <Descriptions.Item label="Propiedad">
-            {property ? (
-              <Link to={`/property/${property._id}`}>
-                {property.address}
+            {visit.property ? (
+              <Link to={`/property/${visit.property._id}`}>
+                {visit.property.address}
+
               </Link>
             ) : (
               'Propiedad no disponible'
@@ -79,7 +76,7 @@ const VisitDetailsPage: React.FC = () => {
         onFinish={async (values) => {
         try {
             setSubmitting(true);
-            await addCommentToVisit(id!, values.comment); // función del hook
+            await updateVisit(id!, 'comment' , values.comment); // función del hook
 
         } catch (error) {
             console.error('Error al actualizar comentario:', error);

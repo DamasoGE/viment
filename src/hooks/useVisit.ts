@@ -18,14 +18,13 @@ const useVisit = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Función para obtener todas las visitas
   useEffect(() => {
     const fetchVisits = async () => {
       try {
         setLoading(true);
         const response = await fetch(`${api}/visit`, {
           method: "GET",
-          credentials: "include", // Incluir las credenciales si es necesario
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -48,7 +47,6 @@ const useVisit = () => {
     fetchVisits();
   }, []);
 
-  // Función para crear una nueva visita
   const createVisit = async (appointment: Date, propertyId: string) => {
     setLoading(true);
 
@@ -83,16 +81,16 @@ const useVisit = () => {
     }
   };
 
-  const addCommentToVisit = async (visitId: string, comment: string) => {
+  const updateVisit = async (visitId: string, field: string, value: string) => {
     const response = await fetch(`${api}/visit/${visitId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ comment }),
+      body: JSON.stringify({ [field]: value }),
     });
   
     if (!response.ok) {
-      throw new Error('Error al actualizar el comentario');
+      throw new Error('Error al actualizar la visita');
     }
   
     const updatedVisit = await response.json();
@@ -101,8 +99,9 @@ const useVisit = () => {
       prev.map((v) => (v._id === visitId ? updatedVisit : v))
     );
   };
+  
 
-  return { visits, loading, error, createVisit, addCommentToVisit };
+  return { visits, loading, error, createVisit, updateVisit };
 };
 
 export default useVisit;

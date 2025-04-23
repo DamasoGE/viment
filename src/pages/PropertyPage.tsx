@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Table, Space } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
-import useProperty, { Property } from '../hooks/useProperty'; // Importa el hook para propiedades
+import useProperty, { Property } from '../hooks/useProperty'; 
 import { ColumnsType } from 'antd/es/table';
 
 const PropertyPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
 
-  const { properties, loading, error } = useProperty(); // Hook que obtiene las propiedades
+  const { properties, loading, error } = useProperty(); 
 
   const [propertyFilter, setPropertyFilter] = useState<Property[]>([]);
 
@@ -16,7 +16,7 @@ const PropertyPage: React.FC = () => {
     if (searchTerm) {
       const filtered = properties.filter((property) =>
         property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (property.seller?.username?.toLowerCase().includes(searchTerm.toLowerCase())) // Filtrar por vendedor
+        (property.seller?.username?.toLowerCase().includes(searchTerm.toLowerCase())) 
       );
       setPropertyFilter(filtered);
     } else {

@@ -28,8 +28,8 @@ const LoginPage: React.FC = () => {
       <div
         className="login-box"
         style={{
-          maxWidth: "400px", // Máxima anchura del formulario
-          width: "100%", // Asegura que el formulario ocupe todo el espacio disponible hasta el maxWidth
+          maxWidth: "400px",
+          width: "100%",
           padding: "20px",
         }}
       >

@@ -17,14 +17,13 @@ const useProperty = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Función para obtener las propiedades
   useEffect(() => {
     const fetchProperties = async () => {
       try {
         setLoading(true);
         const response = await fetch(`${api}/property`, {
           method: "GET",
-          credentials: "include", // Asegúrate de incluir las credenciales si es necesario
+          credentials: "include",
         });
         if (!response.ok) {
           throw new Error("No se pudieron obtener las propiedades");
@@ -45,7 +44,6 @@ const useProperty = () => {
     fetchProperties();
   }, []);
 
-  // Función para crear una nueva propiedad
   const createProperty = async (address: string, sellerId: string ) => {
     setLoading(true);
     try {

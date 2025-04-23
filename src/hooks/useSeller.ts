@@ -14,14 +14,13 @@ const useSeller = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Función para obtener los sellers
   useEffect(() => {
     const fetchSellers = async () => {
       try {
         setLoading(true);
         const response = await fetch(`${api}/seller`, {
           method: "GET",
-          credentials: "include", // Asegúrate de incluir las credenciales si es necesario
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -43,7 +42,6 @@ const useSeller = () => {
     fetchSellers();
   }, []);
 
-  // Función para crear un nuevo seller
   const createSeller = async (newSeller: Seller) => {
     setLoading(true);
     try {

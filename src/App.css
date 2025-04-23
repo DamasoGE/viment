@@ -1,11 +1,5 @@
-/* Quita márgenes/paddings globales */
 html, body, #root {
     margin: 0;
     padding: 0;
     height: 100%;
-  }
-  
-  /* Opcional: asegúrate de que el layout ocupe toda la altura */
-  body {
-    background-color: #fff; /* o lo que estés usando */
   }

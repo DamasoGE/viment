@@ -15,9 +15,9 @@ const SiderBar: React.FC = () => {
 
 
   useEffect(() => {
-    // Se actualiza la key seleccionada en base a la ruta actual
+
     if (location.pathname === '/seller') {
-      setSelectedKey('1'); // O el valor correspondiente si es la página Home
+      setSelectedKey('1');
     } else if (location.pathname === '/property') {
       setSelectedKey('2');
     } else if (location.pathname === '/visit') {

@@ -44,7 +44,6 @@ const PropertyDetailsPage: React.FC = () => {
     <div style={{ padding: 24 }}>
       <h1>Detalles de la Propiedad</h1>
 
-      {/* Información General */}
       <Card title="Información General" style={{ marginBottom: 24 }}>
         <Descriptions column={1}>
           <Descriptions.Item label="Dirección">{property.address}</Descriptions.Item>
@@ -66,14 +65,12 @@ const PropertyDetailsPage: React.FC = () => {
 
       <Divider />
 
-      {/* Historial o Acciones */}
       <Card title="Acciones" style={{ marginBottom: 24 }}>
         <p>(Aquí iría un historial o acciones adicionales relacionadas con la propiedad)</p>
       </Card>
 
       <Divider />
-
-      {/* Visitas */}
+      
       <Card title="Visitas a esta propiedad">
         {loadingVisits ? (
           <Spin tip="Cargando visitas..." />
