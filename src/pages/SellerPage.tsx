@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Table, Space } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import useSeller from '../hooks/useSeller'; // Importa el hook que has creado
-
-interface Seller {
-  username: string;
-  dni: string;
-}
+import { Link, useNavigate } from 'react-router-dom';
+import useSeller, { Seller } from '../hooks/useSeller'; // Importa el hook que has creado
+import { ColumnsType } from 'antd/es/table';
 
 const SellerPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
-
 
   const { sellers, loading, error } = useSeller();
 
@@ -30,7 +25,7 @@ const SellerPage: React.FC = () => {
     }
   }, [searchTerm, sellers]);
 
-  const columns = [
+  const columns: ColumnsType<Seller> = [
     {
       title: 'Nombre de Usuario',
       dataIndex: 'username',
@@ -44,11 +39,11 @@ const SellerPage: React.FC = () => {
     {
       title: 'Acciones',
       key: 'actions',
-      render: () => (
+      render: (_, seller) => (
         <Space size="middle">
-          <Button type="link">
+          <Link to={`/seller/${seller._id}`}>
             Ver detalles
-          </Button>
+          </Link>
         </Space>
       ),
     },

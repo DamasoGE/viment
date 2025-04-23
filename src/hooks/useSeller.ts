@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 
 const api = import.meta.env.VITE_BACKEND_API;
 
-interface Seller {
+export interface Seller {
+  _id?: string;
   username: string;
   dni: string;
+  createdAt?: Date;
 }
 
 const useSeller = () => {
