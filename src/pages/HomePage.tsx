@@ -19,7 +19,9 @@ const HomePage: React.FC = () => {
 
       <Card title="Próximas Visitas">
         {loading ? (
-          <Spin tip="Cargando visitas..." />
+          <Spin tip="Cargando visita...">
+            <div style={{ width: 200, height: 100 }} />
+          </Spin>
         ) : upcomingVisits.length === 0 ? (
           <Typography.Text type="secondary">No hay visitas próximas.</Typography.Text>
         ) : (

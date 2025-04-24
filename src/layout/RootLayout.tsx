@@ -4,10 +4,15 @@ import { Layout } from "antd";
 import SiderBar from "../components/SiderBar";
 import HeaderBar from "../components/HeaderBar";
 import FooterBar from "../components/FooterBar";
+import { useAuth } from "../hooks/useAuth";
+import useAsesor from "../hooks/useAsesor";
 
 const { Content } = Layout;
 
 const RootLayout: React.FC = () => {
+  const { isAuth } = useAuth();
+  const { isAdmin } = useAsesor();
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {/* Header */}
@@ -16,7 +21,7 @@ const RootLayout: React.FC = () => {
       </div>
 
       <Layout>
-            <SiderBar />
+        <SiderBar key={`${isAuth}-${isAdmin}`} /> {/* La key sirve para que al haber un cambio en esta se vuelva a renderizar el componente */}
         <Layout style={{ flex: 1 }}>
           <Content
             style={{

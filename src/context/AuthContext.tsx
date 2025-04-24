@@ -35,6 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuth(data.auth);
         setUser(username);
         localStorage.setItem("user", username);
+        localStorage.setItem("admin", data.admin);
         return true;
       } else {
         console.log("Login failed");
@@ -50,11 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await fetch(`${api}/authasesor/logout`, {
         method: "POST",
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
+        credentials: "include"
       });
       if (!response) {
         throw new Error("No hay respuesta del servidor");
@@ -63,6 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuth(data.auth);
       setUser(null);
       localStorage.removeItem("user");
+      localStorage.removeItem("admin");
       return true;
     } catch (error) {
       console.log("Error: ", error);

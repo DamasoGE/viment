@@ -1,6 +1,7 @@
 export const ROUTES = {
     HOME: '/',
     LOGIN: '/login',
+    PROFILE: '/profile',
     SELLER: '/seller',
     SELLERDETAILS: ':id',
     NEWSELLER: 'new',
@@ -10,6 +11,9 @@ export const ROUTES = {
     VISIT: '/visit',
     VISITDETAILS: ':id',
     NEWVISIT: 'new',
+    ASESOR: '/asesor',
+    ASESORDETAILS: ':id',
+    NEWASESOR: 'new',
     ERROR: '/error',
   } as const;
   

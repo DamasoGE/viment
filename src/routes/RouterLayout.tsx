@@ -14,6 +14,10 @@ import SellerDetailsPage from "../pages/SellerDetailsPage";
 import PropertyDetailsPage from "../pages/PropertyDetailsPage";
 import NewVisitPage from "../pages/NewVisitPage";
 import VisitDetailsPage from "../pages/VisitDetailsPage";
+import AsesorPage from "../pages/AsesorPage";
+import AsesorDetailsPage from "../pages/AsesorDetailsPage";
+import NewAsesorPage from "../pages/NewAsesorPage";
+import ProfilePage from "../pages/ProfilePage";
 
 const RouterLayout = () => {
   return (
@@ -23,6 +27,7 @@ const RouterLayout = () => {
 
         <Route element={<PrivateLayout />}>
           <Route path={ROUTES.HOME} element={<HomePage />} />
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.SELLER}>
             <Route index element={<SellerPage />} />
             <Route path={ROUTES.SELLERDETAILS} element={<SellerDetailsPage />} />
@@ -37,6 +42,11 @@ const RouterLayout = () => {
             <Route index element={<VisitPage />} />
             <Route path={ROUTES.NEWVISIT} element={<NewVisitPage />} />
             <Route path={ROUTES.VISITDETAILS} element={<VisitDetailsPage />} />
+          </Route>
+          <Route path={ROUTES.ASESOR}>
+            <Route index element={<AsesorPage />} />
+            <Route path={ROUTES.ASESORDETAILS} element={<AsesorDetailsPage />} />
+            <Route path={ROUTES.NEWASESOR} element={<NewAsesorPage />} />
           </Route>
           <Route path="*" element={<ErrorPage />} />
         </Route>

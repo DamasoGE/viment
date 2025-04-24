@@ -28,19 +28,21 @@ const HeaderBar: React.FC = () => {
       </Title>
 
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        {user && isAuth ? (
-          <>
-            <IdcardOutlined style={{ color: 'white' }} />
-            <Typography.Text style={{ color: 'white', marginRight: '20px', marginLeft: '5px' }}>
-              {user ? (`${user}`) : ''}
-            </Typography.Text>
-            <Button type="primary" onClick={handleLogout}>
-              Logout
-            </Button>
-          </>
-        ):(
-          <></>
-        )}
+      {user && isAuth ? (
+        <>
+          <IdcardOutlined style={{ color: 'white' }} />
+          <Typography.Text style={{ color: 'white', marginRight: '20px', marginLeft: '5px' }}>
+            <Link to={`/profile`} style={{ color: 'white' }}>
+              {user}
+            </Link>
+          </Typography.Text>
+          <Button type="primary" onClick={handleLogout}>
+            Logout
+          </Button>
+        </>
+      ) : (
+        <></>
+      )}
 
 
       </div>

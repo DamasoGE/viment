@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const PrivateLayout: React.FC = () => {
   
-  const { isAuth, checkAuth } = useAuth();
+  const { isAuth, checkAuth, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
@@ -14,9 +14,15 @@ const PrivateLayout: React.FC = () => {
       await checkAuth();
       setLoading(false);
     }
-    aux();
+    if(localStorage.getItem('user')){
+      aux();
+    }else{
+      logout()
+      setLoading(false);
+    }
+
     
-  }, [isAuth, checkAuth, location.pathname])
+  }, [isAuth, checkAuth, location.pathname, logout])
 
 
   if (loading === true) {
