@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Card, Descriptions, Divider, Result, Button, Spin } from 'antd';
+import { Card, Descriptions, Result, Button, Spin, Divider } from 'antd';
 import useAsesor, { Asesor } from '../hooks/useAsesor';
 
 const AsesorDetailsPage: React.FC = () => {
@@ -48,16 +48,14 @@ const AsesorDetailsPage: React.FC = () => {
     <div style={{ padding: 24 }}>
       <h1>Detalles del Asesor</h1>
 
-      <Card title="Información General" style={{ marginBottom: 24 }}>
+      <Card>
         <Descriptions column={1}>
           <Descriptions.Item label="Nombre de Usuario">{asesor.username}</Descriptions.Item>
           <Descriptions.Item label="Administrador">{asesor.admin ? 'Sí' : 'No'}</Descriptions.Item>
         </Descriptions>
       </Card>
 
-      <Divider />
-
-      <Divider />
+      <Divider/>
 
       <Button type="primary">
         <Link to="/asesor" style={{ color: 'inherit' }}>

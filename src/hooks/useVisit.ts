@@ -4,10 +4,10 @@ import { Property } from "./useProperty";
 const api = import.meta.env.VITE_BACKEND_API;
 
 export interface Visit {
-  _id?: string;
+  _id: string;
   appointment: Date;
   comment?: string;
-  status?: string;
+  status: 'pending' | 'completed' | 'cencelled';
   createdAt?: Date;
   updatedAt?: Date;
   property: Property;

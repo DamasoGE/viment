@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Table, Space } from 'antd';
+import { Button, Input, Table, Space, Tag, Dropdown, Menu, Spin } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import useVisit, { Visit } from '../hooks/useVisit';
 import { ColumnsType } from 'antd/es/table';
+import { EditOutlined } from '@ant-design/icons';
 
 const VisitPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
-
-  const { visits, loading, error } = useVisit();
-
+  const { visits, loading, error, updateVisit } = useVisit();
   const [visitFilter, setVisitFilter] = useState<Visit[]>([]);
 
   useEffect(() => {
@@ -24,32 +23,81 @@ const VisitPage: React.FC = () => {
     }
   }, [searchTerm, visits]);
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'gold';
+      case 'completed':
+        return 'green';
+      case 'cancelled':
+        return 'red';
+      default:
+        return 'default';
+    }
+  };
+
+  const statusTextMap: Record<string, string> = {
+    pending: 'Pendiente',
+    completed: 'Completada',
+    cancelled: 'Cancelada',
+  };
+
+  const handleStatusChange = async (visitId: string, status: string) => {
+    try {
+      await updateVisit(visitId, "status",  status );
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+    }
+  };
+
   const columns: ColumnsType<Visit> = [
     {
       title: 'Cita',
       dataIndex: 'appointment',
       key: 'appointment',
-      render: (appointment: Date) => new Date(appointment).toLocaleString(), 
+      render: (appointment: Date) => new Date(appointment).toLocaleString(),
     },
     {
       title: 'Propiedad',
       dataIndex: 'property',
       key: 'property',
-      render: (_, visit) => (
+      render: (_, visit) =>
         visit.property ? (
           <Link to={`/property/${visit.property._id}`}>
             {visit.property.address}
           </Link>
         ) : (
           'No asignada'
-        )
-      ),
+        ),
     },
     {
       title: 'Estado',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => <span>{status}</span>, 
+      render: (status: string, visit: Visit) => {
+        const menu = (
+          <Menu
+            onClick={({ key }) => handleStatusChange(visit._id, key)}
+            items={[
+              { key: 'pending', label: 'Pendiente' },
+              { key: 'completed', label: 'Completada' },
+              { key: 'cancelled', label: 'Cancelada' },
+            ]}
+          />
+        );
+
+        return (
+          <>
+            <Tag color={getStatusColor(status)}>
+              {statusTextMap[status]}
+            </Tag>
+            <Dropdown overlay={menu} trigger={['click']}>
+              <EditOutlined />
+            </Dropdown>
+          </>
+
+        );
+      },
     },
     {
       title: 'Acciones',
@@ -65,7 +113,13 @@ const VisitPage: React.FC = () => {
   ];
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+        <Spin tip="Cargando visita...">
+          <div style={{ width: 200, height: 100 }} />
+        </Spin>
+      </div>
+    ) 
   }
 
   if (error) {
@@ -85,9 +139,7 @@ const VisitPage: React.FC = () => {
         <Button
           type="primary"
           style={{ marginBottom: 20 }}
-          onClick={() => {
-            navigate('/visit/new');
-          }}
+          onClick={() => navigate('/visit/new')}
         >
           Crear Nueva Visita
         </Button>

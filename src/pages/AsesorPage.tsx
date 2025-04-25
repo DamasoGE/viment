@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Table, Space, Switch } from 'antd';
+import { Button, Input, Table, Space, Switch, Spin } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import useAsesor, { Asesor } from '../hooks/useAsesor';
 import { ColumnsType } from 'antd/es/table';
@@ -83,7 +83,13 @@ const AsesorPage: React.FC = () => {
   ];
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+      <Spin tip="Cargando visita...">
+        <div style={{ width: 200, height: 100 }} />
+      </Spin>
+    </div>
+  ) 
   }
 
   if (error) {

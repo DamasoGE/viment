@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Table, Space } from 'antd';
+import { Button, Input, Table, Space, Spin } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import useSeller, { Seller } from '../hooks/useSeller';
 import { ColumnsType } from 'antd/es/table';
@@ -50,7 +50,13 @@ const SellerPage: React.FC = () => {
   ];
 
   if (loading) {
-    return <div>Loading...</div>; 
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+      <Spin tip="Cargando visita...">
+        <div style={{ width: 200, height: 100 }} />
+      </Spin>
+    </div>
+  ) 
   }
 
   if (error) {

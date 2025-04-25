@@ -37,9 +37,9 @@ const SellerDetailsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Detalles del Vendedor</h1>
+      <h1>Información del Vendedor</h1>
 
-      <Card title="Información General" style={{ marginBottom: 24 }}>
+      <Card>
         <Descriptions column={1}>
           <Descriptions.Item label="Nombre de Usuario">{seller.username}</Descriptions.Item>
           <Descriptions.Item label="DNI">{seller.dni}</Descriptions.Item>
