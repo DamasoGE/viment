@@ -47,35 +47,45 @@ const useVisit = () => {
     fetchVisits();
   }, []);
 
-  const createVisit = async (appointment: Date, propertyId: string) => {
+const createVisit = async (appointment: Date, propertyId: string) => {
     setLoading(true);
+    setError(null);
 
-    const appointmentISO = appointment.toISOString();
+    console.log(appointment);
 
     try {
       const response = await fetch(`${api}/visit/new`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ appointment: appointmentISO, propertyId }),
+        body: JSON.stringify({
+          appointment: appointment.toISOString(),
+          propertyId,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Error al crear la visita");
+        // Intentamos parsear JSON con { message }
+        let errMsg: string;
+        try {
+          const body = await response.json();
+          errMsg = body?.message ?? response.statusText;
+        } catch {
+          errMsg = response.statusText || "Error al crear la visita";
+        }
+        throw new Error(errMsg);
       }
 
-      const createdVisit = await response.json();
+      const created = await response.json();
+      setVisits(v => [...v, created]);
+      return created;
 
-      setVisits((prevVisits) => [...prevVisits, createdVisit]);
-      return createdVisit;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Error desconocido al crear la visita");
-      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error desconocido al crear la visita";
+      console.error("createVisit error:", msg);
+      setError(msg);
+
+      throw new Error(msg);
     } finally {
       setLoading(false);
     }

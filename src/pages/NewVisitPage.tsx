@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Button, DatePicker, Select, message } from 'antd';
+import { Form, Button, DatePicker, Select, message, Alert } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import useProperty from '../hooks/useProperty';
 import useVisit from '../hooks/useVisit'; 
@@ -8,25 +8,28 @@ const { Option } = Select;
 
 const NewVisitPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const { properties } = useProperty();
   const { createVisit } = useVisit();
 
-
   const onFinish = async (values: { appointment: string; propertyId: string }) => {
     setLoading(true);
+    setErrorMsg(null);
 
-
-    const appointmentISO = new Date(values.appointment);
+    const appointmentDate = new Date(values.appointment);
 
     try {
-      await createVisit(appointmentISO, values.propertyId);
+      await createVisit(appointmentDate, values.propertyId);
       message.success('Visita creada con éxito');
       navigate('/visit');
-    } catch (error) {
-      message.error('Error al crear la visita');
-      console.error('Error:', error);
+    } catch (err: unknown ) {
+      if (err instanceof Error) {
+        setErrorMsg(err.message);
+      } else {
+        setErrorMsg('Error desconocido al crear la visita');
+      }
     } finally {
       setLoading(false);
     }
@@ -35,14 +38,25 @@ const NewVisitPage: React.FC = () => {
   return (
     <div style={{ padding: 20 }}>
       <h2 style={{ textAlign: 'center' }}>Añadir Nueva Visita</h2>
+
+      {errorMsg && (
+        <div style={{ display: "flex", width: "100%", justifyContent: "center"}}>
+          <Alert
+            message={errorMsg}
+            type="error"
+            showIcon
+            style={{ marginBottom: 16, width: "300px",  textAlign: "center" }}
+          />
+        </div>
+
+      )}
+
       <Form
         name="newVisit"
         onFinish={onFinish}
         layout="vertical"
-        initialValues={{ appointment: '', propertyId: '' }}
         style={{ maxWidth: 400, margin: 'auto' }}
       >
-
         <Form.Item
           label="Propiedad"
           name="propertyId"

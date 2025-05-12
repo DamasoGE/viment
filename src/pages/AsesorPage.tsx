@@ -3,6 +3,7 @@ import { Button, Input, Table, Space, Switch, Spin } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import useAsesor, { Asesor } from '../hooks/useAsesor';
 import { ColumnsType } from 'antd/es/table';
+import { IoSearchCircleOutline } from 'react-icons/io5';
 
 const AsesorPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -99,24 +100,30 @@ const AsesorPage: React.FC = () => {
 
   return (
     <div style={{ padding: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <Input
-          placeholder="Buscar por username o administrador"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: 300, marginBottom: 20 }}
-        />
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+  <Input
+    placeholder="Buscar por username o administrador"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
+    style={{
+      width: 320,
+      height: 40,
+      backgroundColor: '#fff',
+      borderRadius: 8,
+      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
+      marginBottom: 0,
+    }}
+  />
 
-        <Button
-          type="primary"
-          style={{ marginBottom: 20 }}
-          onClick={() => {
-            navigate('/asesor/new');
-          }}
-        >
-          Crear Nuevo Asesor
-        </Button>
-      </div>
+  <Button
+    type="primary"
+    style={{ height: 40, marginLeft: 16 }}
+    onClick={() => navigate('/asesor/new')}
+  >
+    Crear Nuevo Asesor
+  </Button>
+</div>
 
       <Table
         columns={columns}

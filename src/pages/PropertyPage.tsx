@@ -5,13 +5,14 @@ import useProperty, { Property } from '../hooks/useProperty';
 import useVisit from '../hooks/useVisit';
 import { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { IoSearchCircleOutline } from 'react-icons/io5';
 
 const PropertyPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
 
   const { properties, loading, error, updateProperty } = useProperty();
-  const { visits } = useVisit(); // Asegúrate de tener acceso a las visitas
+  const { visits } = useVisit();
 
   const [propertyFilter, setPropertyFilter] = useState<Property[]>([]);
 
@@ -27,38 +28,33 @@ const PropertyPage: React.FC = () => {
     }
   }, [searchTerm, properties]);
 
-  // Funciones para incrementar y decrementar "Veces Ofrecida"
-  const incrementTimesOffered = async (property: Property) => {
-    const newTimesOffered = property.timesOffered ? property.timesOffered + 1 : 1;
-    await updateProperty(property._id!, 'timesOffered', newTimesOffered.toString());
+  const changeCounter = async (property: Property, field: string, delta: number) => {
+    const current = property[field as keyof Property] as number || 0;
+    const newValue = Math.max(0, current + delta);
+    await updateProperty(property._id!, field, newValue.toString());
   };
 
-  const decrementTimesOffered = async (property: Property) => {
-    if (property.timesOffered && property.timesOffered > 0) {
-      const newTimesOffered = property.timesOffered - 1;
-      await updateProperty(property._id!, 'timesOffered', newTimesOffered.toString());
-    }
-  };
-
-  // Función para obtener la próxima visita de una propiedad
   const getNextVisit = (propertyId: string) => {
     const propertyVisits = visits.filter((visit) => visit.property._id === propertyId);
-    const upcomingVisit = propertyVisits
-      .filter((visit) => new Date(visit.appointment) > new Date()) // Filtrar visitas futuras
-      .sort((a, b) => new Date(a.appointment).getTime() - new Date(b.appointment).getTime())[0]; // Ordenar por la más cercana
-    return upcomingVisit;
+    return propertyVisits
+      .filter((visit) => new Date(visit.appointment) > new Date())
+      .sort((a, b) => new Date(a.appointment).getTime() - new Date(b.appointment).getTime())[0];
   };
 
-  // Función para obtener la anterior visita de una propiedad
   const getPreviousVisit = (propertyId: string) => {
     const propertyVisits = visits.filter((visit) => visit.property._id === propertyId);
-    const previousVisit = propertyVisits
-      .filter((visit) => new Date(visit.appointment) < new Date()) // Filtrar visitas pasadas
-      .sort((a, b) => new Date(b.appointment).getTime() - new Date(a.appointment).getTime())[0]; // Ordenar por la más reciente
-    return previousVisit;
+    return propertyVisits
+      .filter((visit) => new Date(visit.appointment) < new Date())
+      .sort((a, b) => new Date(b.appointment).getTime() - new Date(a.appointment).getTime())[0];
   };
 
-  // Ordenar las propiedades por la próxima visita (de más cercana a más lejana)
+  const getTimesVisited = (propertyId: string): number => {
+    return visits.filter(
+      (visit) =>
+        visit.property._id === propertyId && visit.status === 'completed'
+    ).length;
+  };
+
   const sortedProperties = propertyFilter.sort((a, b) => {
     const nextVisitA = getNextVisit(a._id!);
     const nextVisitB = getNextVisit(b._id!);
@@ -67,98 +63,109 @@ const PropertyPage: React.FC = () => {
     return new Date(nextVisitA.appointment).getTime() - new Date(nextVisitB.appointment).getTime();
   });
 
+  const counterColumn = (title: string, field: keyof Property): ColumnsType<Property>[number] => ({
+    title,
+    key: field,
+    render: (_, property) => (
+      <Space size="middle">
+        <Tooltip title={`Disminuir ${title.toLowerCase()}`}>
+          <Button
+            icon={<MinusOutlined />}
+            onClick={() => changeCounter(property, field, -1)}
+            disabled={!property[field]}
+          />
+        </Tooltip>
+        <span>{Number(property[field] ?? 0)}</span>
+        <Tooltip title={`Aumentar ${title.toLowerCase()}`}>
+          <Button
+            icon={<PlusOutlined />}
+            onClick={() => changeCounter(property, field, 1)}
+          />
+        </Tooltip>
+      </Space>
+    ),
+  });
+
   const columns: ColumnsType<Property> = [
-    {
-      title: 'Dirección',
-      dataIndex: 'address',
-      key: 'address',
-    },
-    {
-      title: 'Vendedor',
-      dataIndex: 'seller',
-      key: 'seller',
-      render: (_, property) => (
-        property.seller ? (
-          <Link to={`/seller/${property.seller._id}`}>
-            {property.seller.username}
-          </Link>
-        ) : (
-          'No asignado'
-        )
+  {
+    title: 'Dirección',
+    dataIndex: 'address',
+    key: 'address',
+  },
+  {
+    title: 'Vendedor',
+    dataIndex: 'seller',
+    key: 'seller',
+    render: (_, property) =>
+      property.seller ? (
+        <Link to={`/seller/${property.seller._id}`}>
+          {property.seller.username}
+        </Link>
+      ) : (
+        'No asignado'
       ),
+  },
+  counterColumn('Vistas Detalle', 'timesDetailView'),
+  counterColumn('Veces Interesado', 'timesInterested'),
+  counterColumn('Veces Listada', 'timesListed'),
+  counterColumn('Veces Ofrecida', 'timesOffered'),
+  {
+    title: 'Veces Visitada',
+    key: 'calculatedTimesVisited',
+    render: (_, property) => (
+      <span>{getTimesVisited(property._id!)}</span>
+    ),
+  },
+  {
+    title: 'Próxima Visita',
+    key: 'nextVisit',
+    render: (_, property) => {
+      const nextVisit = getNextVisit(property._id!);
+      return nextVisit ? (
+        <Link to={`/visit/${nextVisit._id}`}>
+          {new Date(nextVisit.appointment).toLocaleString()}
+        </Link>
+      ) : (
+        'No hay visitas programadas'
+      );
     },
-    {
-      title: 'Veces Ofrecida',
-      dataIndex: 'timesOffered',
-      key: 'timesOffered',
-      render: (_, property) => (
-        <Space size="middle">
-          <Tooltip title="Disminuir veces ofrecida">
-            <Button
-              icon={<MinusOutlined />}
-              onClick={() => decrementTimesOffered(property)}
-              disabled={property.timesOffered === 0}
-            />
-          </Tooltip>
-          <span>{property.timesOffered}</span>
-          <Tooltip title="Aumentar veces ofrecida">
-            <Button
-              icon={<PlusOutlined />}
-              onClick={() => incrementTimesOffered(property)}
-            />
-          </Tooltip>
-        </Space>
-      ),
+  },
+  {
+    title: 'Última Visita',
+    key: 'previousVisit',
+    render: (_, property) => {
+      const previousVisit = getPreviousVisit(property._id!);
+      return previousVisit ? (
+        <Link to={`/visit/${previousVisit._id}`}>
+          {new Date(previousVisit.appointment).toLocaleString()}
+        </Link>
+      ) : (
+        'No hay visitas anteriores'
+      );
     },
-    {
-      title: 'Próxima Visita',
-      key: 'nextVisit',
-      render: (_, property) => {
-        const nextVisit = getNextVisit(property._id!);
-        return nextVisit ? (
-          <Link to={`/visit/${nextVisit._id}`}>
-            {new Date(nextVisit.appointment).toLocaleString()}
-          </Link>
-        ) : (
-          'No hay visitas programadas'
-        );
-      },
-    },
-    {
-      title: 'Última Visita',
-      key: 'previousVisit',
-      render: (_, property) => {
-        const previousVisit = getPreviousVisit(property._id!);
-        return previousVisit ? (
-          <Link to={`/visit/${previousVisit._id}`}>
-            {new Date(previousVisit.appointment).toLocaleString()}
-          </Link>
-        ) : (
-          'No hay visitas anteriores'
-        );
-      },
-    },
-    {
-      title: 'Acciones',
-      key: 'actions',
-      render: (_, property) => (
-        <Space size="middle">
-          <Link to={`/property/${property._id}`}>
-            Ver detalles
-          </Link>
-        </Space>
-      ),
-    },
-  ];
+  },
+  {
+    title: 'Acciones',
+    key: 'actions',
+    render: (_, property) => (
+      <Space size="middle">
+        <Link to={`/property/${property._id}`}>
+          Ver detalles
+        </Link>
+      </Space>
+    ),
+  },
+];
+
 
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-      <Spin tip="Cargando visita...">
-        <div style={{ width: 200, height: 100 }} />
-      </Spin>
-    </div>
-  ) 
+        <Spin tip="Cargando visita...">
+          <div style={{ width: 200, height: 100 }} />
+        </Spin>
+      </div>
+    );
   }
 
   if (error) {
@@ -167,29 +174,37 @@ const PropertyPage: React.FC = () => {
 
   return (
     <div style={{ padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Input
-          placeholder="Buscar por dirección o vendedor"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: 300, marginBottom: 20 }}
-        />
 
-        <Button
-          type="primary"
-          style={{ marginBottom: 20 }}
-          onClick={() => {
-            navigate('/property/new');
-          }}
-        >
-          Crear Nueva Propiedad
-        </Button>
-      </div>
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+  <Input
+    placeholder="Buscar por dirección o vendedor"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
+    style={{
+      width: 320,
+      height: 40,
+      backgroundColor: '#fff',
+      borderRadius: 8,
+      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
+      marginBottom: 0,
+    }}
+  />
+
+  <Button
+    type="primary"
+    style={{ height: 40, marginLeft: 16 }}
+    onClick={() => navigate('/property/new')}
+  >
+    Crear Nueva Propiedad
+  </Button>
+</div>
 
       <Table
         columns={columns}
         dataSource={sortedProperties}
         rowKey="_id"
+        scroll={{ x: true }}
       />
     </div>
   );

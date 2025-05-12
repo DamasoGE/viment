@@ -9,6 +9,10 @@ export interface Property {
   ads: string[];
   seller: Seller;
   timesOffered?: number;
+  timesListed?: number;
+  timesVisited?: number;
+  timesInterested?: number;
+  timesDetailView?: number;
   createdAt?: Date;
 }
 
@@ -75,7 +79,6 @@ const useProperty = () => {
     }
   };
 
-  // Función para actualizar una propiedad
   const updateProperty = async (propertyId: string, field: string, value: string | string[] | number) => {
     try {
       const response = await fetch(`${api}/property/${propertyId}`, {

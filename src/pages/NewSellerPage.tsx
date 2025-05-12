@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, message, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import useSeller from '../hooks/useSeller'; 
+
+const { Text } = Typography;
 
 const NewSellerPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
 
   const { createSeller } = useSeller();
 
@@ -60,6 +61,10 @@ const NewSellerPage: React.FC = () => {
             Crear Vendedor
           </Button>
         </Form.Item>
+
+        <Text type="secondary">
+          La contraseña por defecto será el mismo DNI ingresado.
+        </Text>
       </Form>
     </div>
   );

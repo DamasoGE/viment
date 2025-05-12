@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, message, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import useAsesor from '../hooks/useAsesor';
+
+
+
 
 const NewAsesorPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const { Text } = Typography;
 
   const { createAsesor } = useAsesor();
 
@@ -51,7 +56,13 @@ const NewAsesorPage: React.FC = () => {
             Crear Asesor
           </Button>
         </Form.Item>
+
+        <Text type="secondary">
+          La contraseña por defecto será la misma que el Nombre de usuario
+        </Text>
       </Form>
+
+
     </div>
   );
 };

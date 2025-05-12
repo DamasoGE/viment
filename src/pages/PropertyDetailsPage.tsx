@@ -7,18 +7,15 @@ import {
   Result,
   Button,
   Spin,
-  List,
   Typography,
-  Tag,
-  Table,
-  Input,
-  message,
-  Popover,
   Collapse,
 } from 'antd';
 import useProperty from '../hooks/useProperty';
 import useVisit from '../hooks/useVisit';
-import { MinusOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import PropertyAdSection from '../components/PropertyAdSection';
+import PropertyVisitSection from '../components/PropertyVisitSection';
+import PropertyDocumentSection from '../components/PropertyDocumentSection';
 
 const PropertyDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,102 +32,35 @@ const PropertyDetailsPage: React.FC = () => {
       .sort((a, b) => new Date(a.appointment).getTime() - new Date(b.appointment).getTime());
   }, [visits, id]);
 
+  // States
   const [timesOffered, setTimesOffered] = useState<number>(property?.timesOffered || 0);
+  const [timesListed, setTimesListed] = useState<number>(property?.timesListed || 0);
+  const [timesInterested, setTimesInterested] = useState<number>(property?.timesInterested || 0);
+  const [timesDetailView, setTimesDetailView] = useState<number>(property?.timesDetailView || 0);
   const [ads, setAds] = useState<string[]>(property?.ads || []);
-  const [newAdUrl, setNewAdUrl] = useState('');
-  const [adUrlError, setAdUrlError] = useState<string | null>(null);
-  const [popoverVisible, setPopoverVisible] = useState(false);
 
+  // Sync on property change
   useEffect(() => {
     if (property) {
       setTimesOffered(property.timesOffered || 0);
+      setTimesListed(property.timesListed || 0);
+      setTimesInterested(property.timesInterested || 0);
+      setTimesDetailView(property.timesDetailView || 0);
       setAds(property.ads || []);
     }
   }, [property]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'gold';
-      case 'completed':
-        return 'green';
-      case 'cancelled':
-        return 'red';
-      default:
-        return 'default';
-    }
+  // Método general para cambiar contadores
+  const changeCounter = async (field: string, value: number, setValue: React.Dispatch<React.SetStateAction<number>>) => {
+    if (!property?._id) return;
+    const newValue = Math.max(0, value);
+    setValue(newValue);
+    await updateProperty(property._id, field, newValue.toString());
   };
 
-  const statusTextMap: Record<string, string> = {
-    pending: 'Pendiente',
-    completed: 'Completada',
-    cancelled: 'Cancelada',
-  };
-
-  const handleIncreaseTimesOffered = async () => {
-    if (property?._id) {
-      const updatedTimesOffered = timesOffered + 1;
-      setTimesOffered(updatedTimesOffered);
-      await updateProperty(property._id, 'timesOffered', updatedTimesOffered);
-    }
-  };
-
-  const handleDecreaseTimesOffered = async () => {
-    if (timesOffered > 0 && property?._id) {
-      const updatedTimesOffered = timesOffered - 1;
-      setTimesOffered(updatedTimesOffered);
-      await updateProperty(property._id, 'timesOffered', updatedTimesOffered);
-    }
-  };
-
-  const getPlatformFromUrl = (url: string) => {
-    try {
-      const { hostname } = new URL(url);
-      return hostname.replace('www.', '');
-    } catch {
-      return 'Plataforma desconocida';
-    }
-  };
-
-  const handleAddAd = async () => {
-    const trimmedUrl = newAdUrl.trim();
-  
-    const isValidFormat = /^https?:\/\/[\w.-]+\.[a-z]{2,}/i.test(trimmedUrl);
-    if (!isValidFormat) {
-      setAdUrlError('La URL debe comenzar con http:// o https:// y tener un dominio válido.');
-      setPopoverVisible(true);
-      return;
-    }
-  
-    if (!property?._id) {
-      message.error('Error: no se encontró la propiedad');
-      return;
-    }
-  
-    try {
-      const updatedAds = [...ads, trimmedUrl];
-      setAds(updatedAds);
-      setNewAdUrl('');
-      setAdUrlError(null);
-      setPopoverVisible(false);
-      await updateProperty(property._id, 'ads', updatedAds);
-      message.success('Anuncio agregado');
-    } catch {
-      setAdUrlError('URL inválida.');
-      setPopoverVisible(true);
-    }
-  };
-  
-  const handleRemoveAd = async (urlToRemove: string) => {
-    if (!property?._id) {
-      message.error('Error: no se encontró la propiedad');
-      return;
-    }
-  
-    const updatedAds = ads.filter((url) => url !== urlToRemove);
-    setAds(updatedAds);
-    await updateProperty(property._id, 'ads', updatedAds);
-    message.success('Anuncio eliminado');
+  // Visitas completadas
+  const getTimesVisited = (): number => {
+    return visits.filter(v => v.property._id === id && v.status === 'completed').length;
   };
 
   if (loading) {
@@ -158,115 +88,107 @@ const PropertyDetailsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-
       <h1>Información de la propiedad</h1>
 
-      <Card>
-        <Descriptions column={1}>
-          <Descriptions.Item label="Dirección">{property.address}</Descriptions.Item>
-          <Descriptions.Item label="Vendedor">
-            {property.seller ? (
-              <Link to={`/seller/${property.seller._id}`}>
-                {property.seller.username}
-              </Link>
-            ) : (
-              'No asignado'
-            )}
-          </Descriptions.Item>
-          <Descriptions.Item label="Veces Ofrecida">
-            <Button
-              icon={<MinusOutlined />}
-              onClick={handleDecreaseTimesOffered}
-              style={{ marginRight: 8, height: '20px' }}
-              disabled={timesOffered <= 0}
-            />
-            {timesOffered}
-            <Button
-              icon={<PlusOutlined />}
-              onClick={handleIncreaseTimesOffered}
-              style={{ marginLeft: 8, height: '20px' }}
-            />
-          </Descriptions.Item>
-          <Descriptions.Item label="Fecha de Registro">
-            {property.createdAt
-              ? new Date(property.createdAt).toLocaleDateString()
-              : 'No disponible'}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
+  <Card>
+    <Descriptions column={1}>
+      <Descriptions.Item label="Dirección">{property.address}</Descriptions.Item>
+
+      <Descriptions.Item label="Vendedor">
+        {property.seller ? (
+          <Link to={`/seller/${property.seller._id}`}>{property.seller.username}</Link>
+        ) : (
+          'No asignado'
+        )}
+      </Descriptions.Item>
+
+      {/* Veces Detalle */}
+      <Descriptions.Item label="Vistas Detalle">
+        <Button
+          icon={<MinusOutlined />}
+          onClick={() => changeCounter('timesDetailView', timesDetailView - 1, setTimesDetailView)}
+          style={{ marginRight: 8, height: '20px' }}
+          disabled={timesDetailView <= 0}
+        />
+        {timesDetailView}
+        <Button
+          icon={<PlusOutlined />}
+          onClick={() => changeCounter('timesDetailView', timesDetailView + 1, setTimesDetailView)}
+          style={{ marginLeft: 8, height: '20px' }}
+        />
+      </Descriptions.Item>
+
+      {/* Veces Interesado */}
+      <Descriptions.Item label="Veces Interesado">
+        <Button
+          icon={<MinusOutlined />}
+          onClick={() => changeCounter('timesInterested', timesInterested - 1, setTimesInterested)}
+          style={{ marginRight: 8, height: '20px' }}
+          disabled={timesInterested <= 0}
+        />
+        {timesInterested}
+        <Button
+          icon={<PlusOutlined />}
+          onClick={() => changeCounter('timesInterested', timesInterested + 1, setTimesInterested)}
+          style={{ marginLeft: 8, height: '20px' }}
+        />
+      </Descriptions.Item>
+
+      {/* Veces Listada */}
+      <Descriptions.Item label="Veces Listada">
+        <Button
+          icon={<MinusOutlined />}
+          onClick={() => changeCounter('timesListed', timesListed - 1, setTimesListed)}
+          style={{ marginRight: 8, height: '20px' }}
+          disabled={timesListed <= 0}
+        />
+        {timesListed}
+        <Button
+          icon={<PlusOutlined />}
+          onClick={() => changeCounter('timesListed', timesListed + 1, setTimesListed)}
+          style={{ marginLeft: 8, height: '20px' }}
+        />
+      </Descriptions.Item>
+
+      {/* Veces Ofrecida */}
+      <Descriptions.Item label="Veces Ofrecida">
+        <Button
+          icon={<MinusOutlined />}
+          onClick={() => changeCounter('timesOffered', timesOffered - 1, setTimesOffered)}
+          style={{ marginRight: 8, height: '20px' }}
+          disabled={timesOffered <= 0}
+        />
+        {timesOffered}
+        <Button
+          icon={<PlusOutlined />}
+          onClick={() => changeCounter('timesOffered', timesOffered + 1, setTimesOffered)}
+          style={{ marginLeft: 8, height: '20px' }}
+        />
+      </Descriptions.Item>
+
+      {/* Veces Visitada (solo lectura) */}
+      <Descriptions.Item label="Veces Visitada">
+        {getTimesVisited()}
+      </Descriptions.Item>
+
+      {/* Fecha de registro */}
+      <Descriptions.Item label="Fecha de Registro">
+        {property.createdAt
+          ? new Date(property.createdAt).toLocaleDateString()
+          : 'No disponible'}
+      </Descriptions.Item>
+    </Descriptions>
+  </Card>
+
 
       <Divider />
 
-      <Collapse defaultActiveKey={['2', '3']} accordion>
+      <Collapse accordion={false}>
         <Collapse.Panel header="Anuncios (Ads)" key="2">
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-            <Popover
-              content={adUrlError}
-              visible={popoverVisible}
-              placement="topLeft"
-              trigger="click"
-            >
-              <Input
-                placeholder="Añadir nuevo anuncio (URL)"
-                value={newAdUrl}
-                onChange={(e) => {
-                  setNewAdUrl(e.target.value);
-                  setAdUrlError(null);
-                  setPopoverVisible(false);
-                }}
-                style={{ marginRight: 8 }}
-                status={adUrlError ? 'error' : undefined}
-              />
-            </Popover>
-            <Button type="primary" onClick={handleAddAd}>
-              Añadir
-            </Button>
-          </div>
-
-          {ads.length === 0 ? (
-            <Typography.Text type="secondary">No hay anuncios disponibles.</Typography.Text>
-          ) : (
-            <Table
-              dataSource={ads.map((url, index) => ({
-                key: index,
-                platform: getPlatformFromUrl(url),
-                url,
-              }))}
-              columns={[
-                {
-                  title: 'Plataforma',
-                  dataIndex: 'platform',
-                  key: 'platform',
-                },
-                {
-                  title: 'Enlace',
-                  dataIndex: 'url',
-                  key: 'url',
-                  render: (url) => (
-                    <a href={url} target="_blank" rel="noopener noreferrer">
-                      {url}
-                    </a>
-                  ),
-                },
-                {
-                  title: 'Acciones',
-                  key: 'actions',
-                  render: (_, record) => (
-                    <Button
-                      type="link"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleRemoveAd(record.url)}
-                    >
-                      Eliminar
-                    </Button>
-                  ),
-                },
-              ]}
-              pagination={false}
-              size="small"
-            />
-          )}
+          <PropertyAdSection
+            propertyAds={ads}
+            propertyId={property._id as string}
+          />
         </Collapse.Panel>
 
         <Collapse.Panel header="Visitas a esta propiedad" key="3">
@@ -275,27 +197,17 @@ const PropertyDetailsPage: React.FC = () => {
           ) : propertyVisits.length === 0 ? (
             <Typography.Text type="secondary">No hay visitas registradas.</Typography.Text>
           ) : (
-            <List
-              dataSource={propertyVisits}
-              renderItem={(visit) => (
-                <List.Item>
-                  <List.Item.Meta
-                    title={
-                      <Link to={`/visit/${visit._id}`}>
-                        <Tag color={getStatusColor(visit.status)}>{statusTextMap[visit.status]}</Tag>
-                        {new Date(visit.appointment).toLocaleString()}
-                      </Link>
-                    }
-                    description={
-                      <div style={{ paddingLeft: '20px' }}>
-                        {visit.comment || 'Sin comentario'}
-                      </div>
-                    }
-                  />
-                </List.Item>
-              )}
+            <PropertyVisitSection
+              propertyVisits={visits}
+              propertyId={property._id as string}
             />
           )}
+        </Collapse.Panel>
+
+        <Collapse.Panel header="Documentos del Asesor" key="4">
+          <PropertyDocumentSection
+            propertyId={property._id as string}
+          />
         </Collapse.Panel>
       </Collapse>
 
