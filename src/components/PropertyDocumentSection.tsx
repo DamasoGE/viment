@@ -6,7 +6,7 @@ import { useDocument } from '../hooks/useDocument';
 
 const { Title } = Typography;
 
-const uploads = import.meta.env.VITE_BACKEND_UPLOADS;
+const uploads = import.meta.env.VITE_URL_STORAGE;
 
 interface DocumentFormValues {
   documentName: string;
@@ -35,17 +35,17 @@ const PropertyDocumentSection: React.FC<{ propertyId: string; }> = ({ propertyId
 
   const handleSubmit = async (values: DocumentFormValues) => {
     const file = values.file?.[0]?.originFileObj as RcFile | undefined;
-  
+
     if (!file) {
       message.error('Por favor, sube un archivo válido.');
       return;
     }
-  
+
     try {
       await uploadDocument(file, values.documentName, propertyId);
       message.success('Documento subido exitosamente');
       form.resetFields();
-  
+
       // Llamamos a fetchDocuments para actualizar la lista de documentos después de subir uno nuevo
       await fetchDocuments(propertyId);
     } catch (error) {
@@ -62,80 +62,83 @@ const PropertyDocumentSection: React.FC<{ propertyId: string; }> = ({ propertyId
     }
   };
 
-const normFile = (e: UploadChangeParam) => {
-  console.log('Upload event:', e);
+  const normFile = (e: UploadChangeParam) => {
+    console.log('Upload event:', e);
 
-  if (Array.isArray(e.fileList)) {
-    // Modificar el nombre del archivo si tiene más de 15 caracteres
-    e.fileList = e.fileList.map((file) => {
-      const newFile = { ...file }; // Creamos una copia del archivo para no modificar el original
-      if (newFile.name.length > 15) {
-        newFile.name = `${newFile.name.substring(0, 30)}...`; // Recortamos y añadimos '...'
-      }
-      return newFile;
-    });
-    return e.fileList;
-  }
+    if (Array.isArray(e.fileList)) {
+      // Modificar el nombre del archivo si tiene más de 15 caracteres
+      e.fileList = e.fileList.map((file) => {
+        const newFile = { ...file }; // Creamos una copia del archivo para no modificar el original
+        if (newFile.name.length > 15) {
+          newFile.name = `${newFile.name.substring(0, 30)}...`; // Recortamos y añadimos '...'
+        }
+        return newFile;
+      });
+      return e.fileList;
+    }
 
-  return e?.fileList;
-};
+    return e?.fileList;
+  };
 
   if (loading) {
     return "Cargando...";
   }
 
+  // Filtrar documentos por 'asesor' y 'vendedor'
+  const advisorDocuments = documents.filter((doc) => doc.uploadedBy === 'asesor');
+  const sellerDocuments = documents.filter((doc) => doc.uploadedBy === 'seller');
+
   return (
     <div style={{ marginBottom: 24 }}>
       <Title level={4}>Documentos del Asesor</Title>
 
-<Form layout="vertical" form={form} onFinish={handleSubmit}>
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'flex-start', // Alinea todo arriba
-      gap: 16,
-      width: '100%',
-    }}
-  >
-    <div style={{ flex: 1 }}>
-      <Form.Item
-        name="documentName"
-        rules={[{ required: true, message: 'Ingresa el nombre del documento' }]}
-        style={{ marginBottom: 0, minHeight: 60 }}
-      >
-        <Input placeholder="Nombre del documento" />
-      </Form.Item>
-    </div>
+      <Form layout="vertical" form={form} onFinish={handleSubmit}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start', // Alinea todo arriba
+            gap: 16,
+            width: '100%',
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <Form.Item
+              name="documentName"
+              rules={[{ required: true, message: 'Ingresa el nombre del documento' }]}
+              style={{ marginBottom: 0, minHeight: 60 }}
+            >
+              <Input placeholder="Nombre del documento" />
+            </Form.Item>
+          </div>
 
-    <div style={{ flex: 1 }}>
-      <Form.Item
-        name="file"
-        rules={[{ required: true, message: 'Sube un archivo' }]}
-        valuePropName="fileList"
-        getValueFromEvent={normFile}
-        style={{ marginBottom: 0, minHeight: 60 }}
-      >
-        <Upload beforeUpload={() => false} maxCount={1}>
-          <Button icon={<UploadOutlined />}>Archivo</Button>
-        </Upload>
-      </Form.Item>
-    </div>
+          <div style={{ flex: 1 }}>
+            <Form.Item
+              name="file"
+              rules={[{ required: true, message: 'Sube un archivo' }]}
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+              style={{ marginBottom: 0, minHeight: 60 }}
+            >
+              <Upload beforeUpload={() => false} maxCount={1}>
+                <Button icon={<UploadOutlined />}>Archivo</Button>
+              </Upload>
+            </Form.Item>
+          </div>
 
-    <div style={{ flex: 1 }}>
-      <Form.Item style={{ marginBottom: 0, minHeight: 60 }}>
-        <Button type="primary" htmlType="submit">
-          Subir documento
-        </Button>
-      </Form.Item>
-    </div>
-  </div>
-</Form>
+          <div style={{ flex: 1 }}>
+            <Form.Item style={{ marginBottom: 0, minHeight: 60 }}>
+              <Button type="primary" htmlType="submit">
+                Subir documento
+              </Button>
+            </Form.Item>
+          </div>
+        </div>
+      </Form>
 
-
-      <Title level={5}>Lista de documentos</Title>
+      <Title level={5}>Lista de documentos del Asesor</Title>
       <List
         loading={loading}
-        dataSource={documents}
+        dataSource={advisorDocuments}
         locale={{ emptyText: 'No hay documentos aún.' }}
         renderItem={(doc) => (
           <List.Item key={doc._id}>
@@ -167,9 +170,36 @@ const normFile = (e: UploadChangeParam) => {
       <Divider />
 
       <Title level={4}>Documentos del Vendedor</Title>
-      <Typography.Text type="secondary">
-        Aquí se mostrarán los documentos subidos por el seller. Funcionalidad aún no implementada.
-      </Typography.Text>
+      <List
+        loading={loading}
+        dataSource={sellerDocuments}
+        locale={{ emptyText: 'No hay documentos aún.' }}
+        renderItem={(doc) => (
+          <List.Item key={doc._id}>
+            <List.Item.Meta
+              avatar={<Avatar icon={<FileOutlined />} />}
+              title={
+                <a
+                  href={`${uploads}/${doc.filePath}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {doc.name}
+                </a>
+              }
+              description={`${new Date(doc.createdAt).toLocaleString()}`}
+            />
+            <Popconfirm
+              title="¿Estás seguro de que deseas eliminar este documento?"
+              onConfirm={() => handleDelete(doc._id)}
+              okText="Sí"
+              cancelText="No"
+            >
+              <Button icon={<DeleteOutlined />} danger size="small" />
+            </Popconfirm>
+          </List.Item>
+        )}
+      />
     </div>
   );
 };

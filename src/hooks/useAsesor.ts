@@ -131,6 +131,28 @@ const useAsesor = () => {
     }
   };
 
+  const deleteAsesor = async (id: string): Promise<boolean> => {
+  try {
+    const res = await fetch(`${api}/asesor/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      throw new Error("Error al eliminar el asesor");
+    }
+
+    // Actualiza la lista después de eliminar
+    await fetchAllAsesores();
+
+    return true;
+  } catch (err) {
+    console.error("Error al eliminar asesor:", err);
+    setError("Error al eliminar el asesor");
+    return false;
+  }
+};
+
   return {
     user,
     isAdmin,
@@ -141,6 +163,7 @@ const useAsesor = () => {
     fetchAsesorById,
     createAsesor,
     updateAsesor,
+    deleteAsesor
   };
 };
 

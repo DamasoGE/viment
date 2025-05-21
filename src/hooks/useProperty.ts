@@ -110,7 +110,35 @@ const useProperty = () => {
     }
   };
 
-  return { properties, loading, error, createProperty, updateProperty };
+  const deleteProperty = async (propertyId: string) => {
+  setLoading(true);
+  try {
+    const response = await fetch(`${api}/property/${propertyId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al eliminar la propiedad");
+    }
+
+    setProperties((prevProperties) =>
+      prevProperties.filter((property) => property._id !== propertyId)
+    );
+    return true;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      setError(error.message);
+    } else {
+      setError("Error desconocido al eliminar la propiedad");
+    }
+    return false;
+  } finally {
+    setLoading(false);
+  }
+};
+
+  return { properties, loading, error, createProperty, updateProperty, deleteProperty };
 };
 
 export default useProperty;

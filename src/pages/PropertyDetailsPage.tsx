@@ -9,6 +9,8 @@ import {
   Spin,
   Typography,
   Collapse,
+  message,
+  Popconfirm
 } from 'antd';
 import useProperty from '../hooks/useProperty';
 import useVisit from '../hooks/useVisit';
@@ -16,10 +18,12 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import PropertyAdSection from '../components/PropertyAdSection';
 import PropertyVisitSection from '../components/PropertyVisitSection';
 import PropertyDocumentSection from '../components/PropertyDocumentSection';
+import { useNavigate } from 'react-router-dom';
 
 const PropertyDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { properties, loading, updateProperty } = useProperty();
+  const { properties, loading, updateProperty, deleteProperty } = useProperty();
+  const navigate = useNavigate();
   const { visits, loading: loadingVisits } = useVisit();
 
   const property = useMemo(() => {
@@ -27,10 +31,28 @@ const PropertyDetailsPage: React.FC = () => {
   }, [properties, id]);
 
   const propertyVisits = useMemo(() => {
+    
     return visits
       .filter((v) => v.property._id === id)
       .sort((a, b) => new Date(a.appointment).getTime() - new Date(b.appointment).getTime());
   }, [visits, id]);
+
+const handleDeleteProperty = async () => {
+  if (!property?._id) return;
+
+  try {
+    const success = await deleteProperty(property._id);
+    if (success) {
+      message.success("Propiedad eliminada correctamente");
+      navigate("/property");
+    } else {
+      message.error("No se pudo eliminar la propiedad");
+    }
+  } catch (err) {
+    console.error("Error al eliminar la propiedad:", err);
+    message.error("Ocurrió un error al intentar eliminar la propiedad");
+  }
+};
 
   // States
   const [timesOffered, setTimesOffered] = useState<number>(property?.timesOffered || 0);
@@ -88,7 +110,20 @@ const PropertyDetailsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Información de la propiedad</h1>
+      
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+      <h1 style={{ margin: 0 }}>Información de la propiedad</h1>
+      <Popconfirm
+        title="¿Estás seguro de borrar esta propiedad? Se eliminarán también las visitas asociadas"
+        onConfirm={handleDeleteProperty}
+        okText="Sí"
+        cancelText="No"
+      >
+        <Button type="primary" danger>
+          Borrar Propiedad
+        </Button>
+      </Popconfirm>
+    </div>
 
   <Card>
     <Descriptions column={1}>
@@ -198,7 +233,7 @@ const PropertyDetailsPage: React.FC = () => {
             <Typography.Text type="secondary">No hay visitas registradas.</Typography.Text>
           ) : (
             <PropertyVisitSection
-              propertyVisits={visits}
+              propertyVisits={propertyVisits}
               propertyId={property._id as string}
             />
           )}

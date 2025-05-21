@@ -59,7 +59,6 @@ const useSeller = () => {
       }
 
       const createdSeller = await response.json();
-
       setSellers((prevSellers) => [...prevSellers, createdSeller]);
       return createdSeller;
     } catch (error: unknown) {
@@ -73,7 +72,35 @@ const useSeller = () => {
     }
   };
 
-  return { sellers, loading, error, createSeller };
+  const deleteSeller = async (sellerId: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${api}/seller/${sellerId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar el vendedor");
+      }
+
+      setSellers((prevSellers) =>
+        prevSellers.filter((seller) => seller._id !== sellerId)
+      );
+      return true;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Error desconocido al eliminar el vendedor");
+      }
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { sellers, loading, error, createSeller, deleteSeller };
 };
 
 export default useSeller;

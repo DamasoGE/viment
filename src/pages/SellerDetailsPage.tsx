@@ -1,20 +1,48 @@
 import React, { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Card, Descriptions, Divider, Result, Button, List, Spin } from 'antd';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import {
+  Card,
+  Descriptions,
+  Divider,
+  Result,
+  Button,
+  List,
+  Spin,
+  message,
+  Popconfirm,
+} from 'antd';
 import useSeller from '../hooks/useSeller';
 import useProperty from '../hooks/useProperty';
 
 const SellerDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { sellers, loading: loadingSellers } = useSeller();
+  const navigate = useNavigate();
+  const { sellers, loading: loadingSellers, deleteSeller } = useSeller();
   const { properties, loading: loadingProperties } = useProperty();
 
-  const seller = useMemo(() => sellers.find((s) => s._id === id) || null, [sellers, id]);
+  const seller = useMemo(
+    () => sellers.find((s) => s._id === id) || null,
+    [sellers, id]
+  );
 
   const sellerProperties = useMemo(
     () => properties.filter((p) => p.seller?._id === id),
     [properties, id]
   );
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    const success = await deleteSeller(id);
+
+    if(success){
+      message.success('Vendedor borrado correctamente');
+      navigate('/seller');
+    }else{
+    message.error('No se pudo borrar el vendedor');
+    }
+
+  };
 
   if (loadingSellers || loadingProperties) {
     return (
@@ -30,21 +58,39 @@ const SellerDetailsPage: React.FC = () => {
         status="404"
         title="Cliente no encontrado"
         subTitle="No pudimos encontrar un vendedor con ese ID."
-        extra={<Button type="primary" href="/seller">Volver al listado</Button>}
+        extra={
+          <Button type="primary" href="/seller">
+            Volver al listado
+          </Button>
+        }
       />
     );
   }
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Información del Vendedor</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h1 style={{ margin: 0 }}>Información del Vendedor</h1>
+        <Popconfirm
+          title="¿Estás seguro de borrar este vendedor? Se borrarán también sus propiedades y visitas"
+          onConfirm={handleDelete}
+          okText="Sí"
+          cancelText="No"
+        >
+          <Button type="primary" danger>
+            Borrar Vendedor
+          </Button>
+        </Popconfirm>
+      </div>
 
       <Card>
         <Descriptions column={1}>
           <Descriptions.Item label="Nombre de Usuario">{seller.username}</Descriptions.Item>
           <Descriptions.Item label="DNI">{seller.dni}</Descriptions.Item>
           <Descriptions.Item label="Fecha de Registro">
-            {seller.createdAt ? new Date(seller.createdAt).toLocaleDateString() : 'No disponible'}
+            {seller.createdAt
+              ? new Date(seller.createdAt).toLocaleDateString()
+              : 'No disponible'}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -78,12 +124,11 @@ const SellerDetailsPage: React.FC = () => {
 
       <Divider />
 
-        <Button type="primary">
-            <Link to="/seller" style={{ color: 'inherit' }}>
-                Volver a la lista de vendedores
-            </Link>
-        </Button>
-      
+      <Button type="primary">
+        <Link to="/seller" style={{ color: 'inherit' }}>
+          Volver a la lista de vendedores
+        </Link>
+      </Button>
     </div>
   );
 };

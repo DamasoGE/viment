@@ -1,29 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Card, Descriptions, Result, Button, Spin, Divider } from 'antd';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Card, Descriptions, Result, Button, Spin, Divider, Popconfirm, message } from 'antd';
 import useAsesor, { Asesor } from '../hooks/useAsesor';
 
 const AsesorDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { fetchAsesorById, loading } = useAsesor();
+  const navigate = useNavigate();
+  const { fetchAsesorById, loading, deleteAsesor, user } = useAsesor(); // <-- obtener user logueado
   const [asesor, setAsesor] = useState<Asesor | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const aux = async () => {
-        if (id){
-            const asesorfetch = await fetchAsesorById(id);
-            setAsesor(asesorfetch);
-        }
-    }
+      if (id) {
+        const asesorfetch = await fetchAsesorById(id);
+        setAsesor(asesorfetch);
+      }
+    };
     aux();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  const confirmDelete = async () => {
+    if (!id) return;
+    setDeleting(true);
+    const success = await deleteAsesor(id);
+    setDeleting(false);
+    if (success) {
+      message.success('Asesor eliminado correctamente');
+      navigate('/asesor');
+    } else {
+      message.error('Error al eliminar el asesor');
+    }
+  };
 
-
-
-  // Si estamos cargando los datos de los asesores o las propiedades, mostrar un spinner
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
@@ -32,7 +42,6 @@ const AsesorDetailsPage: React.FC = () => {
     );
   }
 
-  // Si no se encuentra el asesor, mostrar un mensaje de error
   if (!asesor) {
     return (
       <Result
@@ -44,9 +53,28 @@ const AsesorDetailsPage: React.FC = () => {
     );
   }
 
+  // Validamos si es el usuario logueado para evitar borrar a sí mismo
+  const isSelf = user?._id === id;
+
   return (
     <div style={{ padding: 24 }}>
-      <h1>Detalles del Asesor</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>Detalles del Asesor</h1>
+
+        {!isSelf && (
+          <Popconfirm
+            title="¿Estás seguro de eliminar este asesor?"
+            onConfirm={confirmDelete}
+            okText="Sí"
+            cancelText="No"
+            disabled={deleting}
+          >
+            <Button type="primary" danger loading={deleting}>
+              Borrar Asesor
+            </Button>
+          </Popconfirm>
+        )}
+      </div>
 
       <Card>
         <Descriptions column={1}>
@@ -55,7 +83,7 @@ const AsesorDetailsPage: React.FC = () => {
         </Descriptions>
       </Card>
 
-      <Divider/>
+      <Divider />
 
       <Button type="primary">
         <Link to="/asesor" style={{ color: 'inherit' }}>

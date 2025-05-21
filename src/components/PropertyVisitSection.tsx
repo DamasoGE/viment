@@ -9,6 +9,7 @@ const PropertyVisitSection: React.FC<{ propertyVisits: Visit[]; propertyId: stri
 
     useEffect(() => {
         setVisits(propertyVisits);
+        
     }, [propertyVisits])
 
 

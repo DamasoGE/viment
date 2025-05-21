@@ -1,20 +1,33 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Card, Descriptions, Divider, Result, Button, Spin, Form, Input, Menu, Dropdown, Tag } from 'antd';
-import useVisit, { Visit } from '../hooks/useVisit'; // Asegúrate de importar el hook adecuado
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import {
+  Card,
+  Descriptions,
+  Divider,
+  Result,
+  Button,
+  Spin,
+  Form,
+  Input,
+  Menu,
+  Dropdown,
+  Tag,
+  Popconfirm,
+  message
+} from 'antd';
+import useVisit, { Visit } from '../hooks/useVisit';
 import { EditOutlined } from '@ant-design/icons';
 
 const VisitDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { visits, loading: visitLoading, updateVisit } = useVisit();
+  const navigate = useNavigate();
+  const { visits, loading: visitLoading, updateVisit, deleteVisit } = useVisit();
   const [submitting, setSubmitting] = useState(false);
 
-  // Buscar la visita correspondiente
   const visit: Visit | null = useMemo(() => {
     return visits.find((v) => v._id === id) || null;
   }, [visits, id]);
 
-  // Cambiar el estado de la visita
   const handleStatusChange = async (visitId: string, status: string) => {
     try {
       await updateVisit(visitId, "status", status);
@@ -23,14 +36,24 @@ const VisitDetailsPage: React.FC = () => {
     }
   };
 
-  // Definir el menú de selección de estado
+  const handleDelete = async () => {
+    if (!id) return;
+    const deleted = await deleteVisit(id);
+    if (deleted) {
+      message.success('Visita eliminada correctamente');
+      navigate('/visit');
+    } else {
+      message.error('No se pudo eliminar la visita');
+    }
+  };
+
   const menu = (
     <Menu
-    onClick={({ key }) => {
-      if (visit) {
-        handleStatusChange(visit._id, key);
-      }
-    }}
+      onClick={({ key }) => {
+        if (visit) {
+          handleStatusChange(visit._id, key);
+        }
+      }}
       items={[
         { key: 'pending', label: 'Pendiente' },
         { key: 'completed', label: 'Completada' },
@@ -39,7 +62,6 @@ const VisitDetailsPage: React.FC = () => {
     />
   );
 
-  // Asignar un color al estado de la visita
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -53,14 +75,12 @@ const VisitDetailsPage: React.FC = () => {
     }
   };
 
-  // Mapear los textos de los estados
   const statusTextMap: Record<string, string> = {
     pending: 'Pendiente',
     completed: 'Completada',
     cancelled: 'Cancelada',
   };
 
-  // Mostrar el loading mientras se obtienen los datos de la visita
   if (visitLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
@@ -71,7 +91,6 @@ const VisitDetailsPage: React.FC = () => {
     );
   }
 
-  // Mostrar error si no se encuentra la visita
   if (!visit) {
     return (
       <Result
@@ -89,9 +108,20 @@ const VisitDetailsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Información de la Visita</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>Información de la Visita</h1>
+        <Popconfirm
+          title="¿Estás seguro de eliminar esta visita?"
+          onConfirm={handleDelete}
+          okText="Sí"
+          cancelText="No"
+        >
+          <Button type="primary" danger>
+            Borrar Visita
+          </Button>
+        </Popconfirm>
+      </div>
 
-      {/* Sección 1: Información de la Visita */}
       <Card>
         <Descriptions column={1}>
           <Descriptions.Item label="Fecha de la Cita">
@@ -109,20 +139,18 @@ const VisitDetailsPage: React.FC = () => {
           </Descriptions.Item>
 
           <Descriptions.Item label="Estado">
-              <Tag color={getStatusColor(visit.status)}>
-                {statusTextMap[visit.status]}
-              </Tag>
+            <Tag color={getStatusColor(visit.status)}>
+              {statusTextMap[visit.status]}
+            </Tag>
             <Dropdown overlay={menu} trigger={['click']}>
               <EditOutlined />
             </Dropdown>
-
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
       <Divider />
 
-      {/* Sección 2: Comentario */}
       <Card title="Comentario">
         {visit.comment ? (
           <p><strong>Comentario actual:</strong> {visit.comment}</p>
@@ -135,7 +163,7 @@ const VisitDetailsPage: React.FC = () => {
           onFinish={async (values) => {
             try {
               setSubmitting(true);
-              await updateVisit(id!, 'comment', values.comment); // Función del hook
+              await updateVisit(id!, 'comment', values.comment);
             } catch (error) {
               console.error('Error al actualizar comentario:', error);
             } finally {

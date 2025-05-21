@@ -109,9 +109,41 @@ const createVisit = async (appointment: Date, propertyId: string) => {
       prev.map((v) => (v._id === visitId ? updatedVisit : v))
     );
   };
+
+  const deleteVisit = async (visitId: string) => {
+  setLoading(true);
+  try {
+    const response = await fetch(`${api}/visit/${visitId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    console.log(response);
+
+    if (!response.ok) {
+      throw new Error("Error al eliminar la visita");
+    }
+
+    setVisits((prevVisits) =>
+      prevVisits.filter((visit) => visit._id !== visitId)
+    );
+
+    return true;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      setError(error.message);
+    } else {
+      setError("Error desconocido al eliminar la visita");
+    }
+    return false;
+  } finally {
+    setLoading(false);
+  }
+};
+
   
 
-  return { visits, loading, error, createVisit, updateVisit };
+  return { visits, loading, error, createVisit, updateVisit, deleteVisit };
 };
 
 export default useVisit;
