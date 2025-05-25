@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Spin } from "antd";
 import { useAuth } from '../hooks/useAuth';
+import CenteredSpin from '../components/CenteredSpin';
 
 const PrivateLayout: React.FC = () => {
   
@@ -27,9 +27,7 @@ const PrivateLayout: React.FC = () => {
 
   if (loading === true) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", paddingTop: "10vh" }}>
-        <Spin size="large" />
-      </div>
+      <CenteredSpin/>
     );
   }
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -6,7 +6,6 @@ import {
   Divider,
   Result,
   Button,
-  Spin,
   Form,
   Input,
   Menu,
@@ -17,16 +16,27 @@ import {
 } from 'antd';
 import useVisit, { Visit } from '../hooks/useVisit';
 import { EditOutlined } from '@ant-design/icons';
+import { HeaderPageContainer } from '../styles/theme';
+import { getStatusColor, statusTextMap } from '../helpers/status';
+import CenteredSpin from '../components/CenteredSpin';
 
 const VisitDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { visits, loading: visitLoading, updateVisit, deleteVisit } = useVisit();
+  const { loading: loading, fetchVisitById, updateVisit, deleteVisit } = useVisit();
+  const [visit, setVisit] = useState<Visit | null>()
   const [submitting, setSubmitting] = useState(false);
 
-  const visit: Visit | null = useMemo(() => {
-    return visits.find((v) => v._id === id) || null;
-  }, [visits, id]);
+    useEffect(() => {
+        const aux = async () => {
+          if (id) {
+            const visitFetch = await fetchVisitById(id);
+            setVisit(visitFetch);
+          }
+        };
+        aux();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
   const handleStatusChange = async (visitId: string, status: string) => {
     try {
@@ -47,6 +57,11 @@ const VisitDetailsPage: React.FC = () => {
     }
   };
 
+  const menuItems = Object.entries(statusTextMap).map(([key, label]) => ({
+  key,
+  label,
+  }));
+
   const menu = (
     <Menu
       onClick={({ key }) => {
@@ -54,40 +69,13 @@ const VisitDetailsPage: React.FC = () => {
           handleStatusChange(visit._id, key);
         }
       }}
-      items={[
-        { key: 'pending', label: 'Pendiente' },
-        { key: 'completed', label: 'Completada' },
-        { key: 'cancelled', label: 'Cancelada' },
-      ]}
+    items={menuItems}
     />
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'gold';
-      case 'completed':
-        return 'green';
-      case 'cancelled':
-        return 'red';
-      default:
-        return 'default';
-    }
-  };
-
-  const statusTextMap: Record<string, string> = {
-    pending: 'Pendiente',
-    completed: 'Completada',
-    cancelled: 'Cancelada',
-  };
-
-  if (visitLoading) {
+  if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Spin tip="Cargando visita...">
-          <div style={{ width: 200, height: 100 }} />
-        </Spin>
-      </div>
+      <CenteredSpin tipText='Cargando Visita...'/>
     );
   }
 
@@ -107,8 +95,8 @@ const VisitDetailsPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+    <>
+      <HeaderPageContainer>
         <h1 style={{ margin: 0 }}>Información de la Visita</h1>
         <Popconfirm
           title="¿Estás seguro de eliminar esta visita?"
@@ -120,7 +108,7 @@ const VisitDetailsPage: React.FC = () => {
             Borrar Visita
           </Button>
         </Popconfirm>
-      </div>
+      </HeaderPageContainer>
 
       <Card>
         <Descriptions column={1}>
@@ -195,7 +183,7 @@ const VisitDetailsPage: React.FC = () => {
           Volver a la lista de visitas
         </Link>
       </Button>
-    </div>
+    </>
   );
 };
 

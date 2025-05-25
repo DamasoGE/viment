@@ -19,8 +19,8 @@ const PropertyVisitSection: React.FC<{ propertyVisits: Visit[]; propertyId: stri
             return 'gold';
           case 'completed':
             return 'green';
-          case 'cancelled':
-            return 'red';
+          case 'canceled':
+            return 'lightgrey';
           default:
             return 'default';
         }
@@ -29,7 +29,7 @@ const PropertyVisitSection: React.FC<{ propertyVisits: Visit[]; propertyId: stri
       const statusTextMap: Record<string, string> = {
         pending: 'Pendiente',
         completed: 'Completada',
-        cancelled: 'Cancelada',
+        canceled: 'Cancelada',
       };
     
   

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -7,48 +7,61 @@ import {
   Result,
   Button,
   List,
-  Spin,
   message,
   Popconfirm,
+  Switch,
 } from 'antd';
-import useSeller from '../hooks/useSeller';
-import useProperty from '../hooks/useProperty';
+import useSeller, { Seller } from '../hooks/useSeller';
+import { HeaderPageContainer } from '../styles/theme';
+import CenteredSpin from '../components/CenteredSpin';
 
 const SellerDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { sellers, loading: loadingSellers, deleteSeller } = useSeller();
-  const { properties, loading: loadingProperties } = useProperty();
+  const { fetchSellerById, deleteSeller, toggleRequireAsesor, loading } = useSeller();
 
-  const seller = useMemo(
-    () => sellers.find((s) => s._id === id) || null,
-    [sellers, id]
-  );
+  const [seller, setSeller] = useState<Seller | null>(null);
 
-  const sellerProperties = useMemo(
-    () => properties.filter((p) => p.seller?._id === id),
-    [properties, id]
-  );
+  useEffect(() => {
+      const aux = async () => {
+        if (id) {
+          const sellerfetch = await fetchSellerById(id);
+          setSeller(sellerfetch);
+        }
+      };
+      aux();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDelete = async () => {
     if (!id) return;
 
     const success = await deleteSeller(id);
 
-    if(success){
+    if (success) {
       message.success('Vendedor borrado correctamente');
       navigate('/seller');
-    }else{
-    message.error('No se pudo borrar el vendedor');
+    } else {
+      message.error('No se pudo borrar el vendedor');
     }
-
   };
 
-  if (loadingSellers || loadingProperties) {
+  const handleToggleRequireAsesor = async () => {
+    if (!id) return;
+    try {
+      await toggleRequireAsesor(id);
+      setSeller((prev) =>
+        prev ? { ...prev, requireAsesor: !prev.requireAsesor } : prev
+      );
+      message.success('Requiere asesor actualizado');
+    } catch {
+      message.error('Error al actualizar requiere asesor');
+    }
+  };
+
+  if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Spin size="large" tip="Cargando información del vendedor..." />
-      </div>
+      <CenteredSpin tipText='Cargando Vendedor'/>
     );
   }
 
@@ -68,8 +81,8 @@ const SellerDetailsPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+    <>
+      <HeaderPageContainer>
         <h1 style={{ margin: 0 }}>Información del Vendedor</h1>
         <Popconfirm
           title="¿Estás seguro de borrar este vendedor? Se borrarán también sus propiedades y visitas"
@@ -81,7 +94,7 @@ const SellerDetailsPage: React.FC = () => {
             Borrar Vendedor
           </Button>
         </Popconfirm>
-      </div>
+      </HeaderPageContainer>
 
       <Card>
         <Descriptions column={1}>
@@ -92,18 +105,24 @@ const SellerDetailsPage: React.FC = () => {
               ? new Date(seller.createdAt).toLocaleDateString()
               : 'No disponible'}
           </Descriptions.Item>
+          <Descriptions.Item label="Requiere Asesor">
+            <Switch
+              checked={seller.requireAsesor}
+              onChange={handleToggleRequireAsesor}
+            />
+          </Descriptions.Item>
         </Descriptions>
       </Card>
 
       <Divider />
 
       <Card title="Propiedades del Vendedor">
-        {sellerProperties.length === 0 ? (
+        {seller.properties?.length === 0 ? (
           <p>Este vendedor no tiene propiedades registradas.</p>
         ) : (
           <List
             itemLayout="horizontal"
-            dataSource={sellerProperties}
+            dataSource={seller.properties}
             renderItem={(property) => (
               <List.Item
                 actions={[
@@ -129,7 +148,7 @@ const SellerDetailsPage: React.FC = () => {
           Volver a la lista de vendedores
         </Link>
       </Button>
-    </div>
+    </>
   );
 };
 

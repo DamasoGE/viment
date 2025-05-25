@@ -46,7 +46,6 @@ const PropertyDocumentSection: React.FC<{ propertyId: string; }> = ({ propertyId
       message.success('Documento subido exitosamente');
       form.resetFields();
 
-      // Llamamos a fetchDocuments para actualizar la lista de documentos después de subir uno nuevo
       await fetchDocuments(propertyId);
     } catch (error) {
       message.error('Error al subir el documento: ' + (error as Error).message);
@@ -66,11 +65,11 @@ const PropertyDocumentSection: React.FC<{ propertyId: string; }> = ({ propertyId
     console.log('Upload event:', e);
 
     if (Array.isArray(e.fileList)) {
-      // Modificar el nombre del archivo si tiene más de 15 caracteres
+
       e.fileList = e.fileList.map((file) => {
-        const newFile = { ...file }; // Creamos una copia del archivo para no modificar el original
+        const newFile = { ...file }; 
         if (newFile.name.length > 15) {
-          newFile.name = `${newFile.name.substring(0, 30)}...`; // Recortamos y añadimos '...'
+          newFile.name = `${newFile.name.substring(0, 30)}...`;
         }
         return newFile;
       });
@@ -84,7 +83,6 @@ const PropertyDocumentSection: React.FC<{ propertyId: string; }> = ({ propertyId
     return "Cargando...";
   }
 
-  // Filtrar documentos por 'asesor' y 'vendedor'
   const advisorDocuments = documents.filter((doc) => doc.uploadedBy === 'asesor');
   const sellerDocuments = documents.filter((doc) => doc.uploadedBy === 'seller');
 
@@ -96,7 +94,7 @@ const PropertyDocumentSection: React.FC<{ propertyId: string; }> = ({ propertyId
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-start', // Alinea todo arriba
+            alignItems: 'flex-start',
             gap: 16,
             width: '100%',
           }}

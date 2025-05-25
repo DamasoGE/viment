@@ -26,7 +26,7 @@ const NewSellerPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <>
       <h2 style={{ textAlign: 'center' }}>Añadir Nuevo Vendedor</h2>
       <Form
         name="newSeller"
@@ -66,7 +66,7 @@ const NewSellerPage: React.FC = () => {
           La contraseña por defecto será el mismo DNI ingresado.
         </Text>
       </Form>
-    </div>
+    </>
   );
 };
 

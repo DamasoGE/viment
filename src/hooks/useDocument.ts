@@ -47,20 +47,17 @@ export const useDocument = () => {
   const uploadDocument = async (file: File, name: string, propertyId: string) => {
     const formData = new FormData();
 
-    // Extraemos la extensión del archivo
-    const fileExtension = file.name.split('.').pop();  // Obtiene la extensión del archivo original
+    const fileExtension = file.name.split('.').pop();
 
-    // Sanitizar el nombre del archivo para evitar problemas con caracteres especiales
+
     const sanitizedFileName = name
-      .replace(/[^\w\s-]/g, '')  // Eliminar caracteres especiales
-      .trim()                    // Eliminar espacios en blanco al principio y al final
-      .replace(/\s+/g, '')       // Eliminar todos los espacios
-      .toLowerCase();            // Convertir todo a minúsculas
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '')
+      .toLowerCase();
 
-    // Asegurarse de que se mantenga la extensión original
     const newFileName = `${sanitizedFileName}.${fileExtension}`;
 
-    // Crear un nuevo archivo con el nombre sanitizado y la extensión original
     const newFile = new File([file], newFileName, { type: file.type });
 
     formData.append('file', newFile);

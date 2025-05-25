@@ -1,51 +1,55 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Table, Space, Tag, Dropdown, Menu, Spin } from 'antd';
+import { Button, Input, Table, Space, Tag, Dropdown, Menu, DatePicker, Empty } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import useVisit, { Visit } from '../hooks/useVisit';
 import { ColumnsType } from 'antd/es/table';
-import { EditOutlined } from '@ant-design/icons';
+import { EditOutlined, SettingOutlined } from '@ant-design/icons';
 import { IoSearchCircleOutline } from 'react-icons/io5';
+import { ContainerFlex, HeaderPageContainer } from '../styles/theme';
+import CenteredSpin from '../components/CenteredSpin';
+import { getStatusColor, statusTextMap } from '../helpers/status';
+import dayjs, { Dayjs } from 'dayjs';
 
 const VisitPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const navigate = useNavigate();
-  const { visits, loading, error, updateVisit } = useVisit();
+  const { visits, loading, error, updateVisit, fetchVisits } = useVisit();
   const [visitFilter, setVisitFilter] = useState<Visit[]>([]);
 
+
   useEffect(() => {
+    const init = async () => {
+      await fetchVisits();
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let filtered = visits;
+
     if (searchTerm) {
-      const filtered = visits.filter((visit) =>
+      filtered = filtered.filter((visit) =>
         visit.property?.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (visit.status?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-      setVisitFilter(filtered);
-    } else {
-      setVisitFilter(visits);
     }
-  }, [searchTerm, visits]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'gold';
-      case 'completed':
-        return 'green';
-      case 'cancelled':
-        return 'red';
-      default:
-        return 'default';
+    if (startDate && endDate) {
+      filtered = filtered.filter((visit) => {
+        const visitDate = dayjs(visit.appointment);
+        return visitDate.isAfter(startDate.startOf('day')) && visitDate.isBefore(endDate.endOf('day'));
+      });
     }
-  };
 
-  const statusTextMap: Record<string, string> = {
-    pending: 'Pendiente',
-    completed: 'Completada',
-    cancelled: 'Cancelada',
-  };
+    setVisitFilter(filtered);
+  }, [searchTerm, startDate, endDate, visits]);
 
   const handleStatusChange = async (visitId: string, status: string) => {
     try {
-      await updateVisit(visitId, "status",  status );
+      await updateVisit(visitId, "status", status);
     } catch (error) {
       console.error('Error al cambiar estado:', error);
     }
@@ -53,10 +57,34 @@ const VisitPage: React.FC = () => {
 
   const columns: ColumnsType<Visit> = [
     {
+      title: 'Acciones',
+      width: 100,
+      align: 'center',
+      key: 'actions',
+      render: (_, visit) => (
+        <Space>
+          <Link to={`/visit/${visit._id}`}>
+            <SettingOutlined style={{ color: "black", fontSize: "18px" }} />
+          </Link>
+        </Space>
+      ),
+    },
+    {
       title: 'Cita',
       dataIndex: 'appointment',
       key: 'appointment',
-      render: (appointment: Date) => new Date(appointment).toLocaleString(),
+      render: (appointment: Date) => {
+        const date = new Date(appointment);
+        return "📅" + date.toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }) + '     ⌚' + date.toLocaleTimeString(undefined, {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        });
+      },
     },
     {
       title: 'Propiedad',
@@ -76,51 +104,35 @@ const VisitPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: string, visit: Visit) => {
+          const menuItems = Object.entries(statusTextMap).map(([key, label]) => ({
+          key,
+          label,
+          }));
         const menu = (
           <Menu
             onClick={({ key }) => handleStatusChange(visit._id, key)}
-            items={[
-              { key: 'pending', label: 'Pendiente' },
-              { key: 'completed', label: 'Completada' },
-              { key: 'cancelled', label: 'Cancelada' },
-            ]}
+            items={menuItems}
           />
         );
 
         return (
           <>
-            <Tag color={getStatusColor(status)}>
-              {statusTextMap[status]}
-            </Tag>
+            <div style={{ minWidth: 90, display: 'inline-block' }}>
+              <Tag color={getStatusColor(status)} style={{ width: '100%', textAlign: 'center' }}>
+                {statusTextMap[status]}
+              </Tag>
+            </div>
             <Dropdown overlay={menu} trigger={['click']}>
-              <EditOutlined />
+              <EditOutlined style={{ cursor: 'pointer', marginLeft: 8 }} />
             </Dropdown>
           </>
-
         );
       },
-    },
-    {
-      title: 'Acciones',
-      key: 'actions',
-      render: (_, visit) => (
-        <Space size="middle">
-          <Link to={`/visit/${visit._id}`}>
-            Ver detalles
-          </Link>
-        </Space>
-      ),
     },
   ];
 
   if (loading) {
-    return (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Spin tip="Cargando visita...">
-          <div style={{ width: 200, height: 100 }} />
-        </Spin>
-      </div>
-    ) 
+    return <CenteredSpin tipText='Cargando Visitas...' />;
   }
 
   if (error) {
@@ -128,38 +140,50 @@ const VisitPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-  <Input
-    placeholder="Buscar por propiedad o estado"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
-    style={{
-      width: 320,
-      height: 40,
-      backgroundColor: '#fff',
-      borderRadius: 8,
-      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
-      marginBottom: 0,
-    }}
-  />
+    <>
+      <HeaderPageContainer>
+        <ContainerFlex>
+          <Input
+            placeholder="Buscar por propiedad o estado"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
+          />
 
-  <Button
-    type="primary"
-    style={{ height: 40, marginLeft: 16 }}
-    onClick={() => navigate('/visit/new')}
-  >
-    Crear Nueva Visita
-  </Button>
-</div>
+          <DatePicker
+            placeholder="Desde"
+            value={startDate}
+            onChange={setStartDate}
+            style={{ height: 40 }}
+          />
+
+          <DatePicker
+            placeholder="Hasta"
+            value={endDate}
+            onChange={setEndDate}
+            style={{ height: 40 }}
+          />
+        </ContainerFlex>
+
+
+        <Button
+          type="primary"
+          style={{ height: 40 }}
+          onClick={() => navigate('/visit/new')}
+        >
+          Crear Nueva Visita
+        </Button>
+      </HeaderPageContainer>
 
       <Table
         columns={columns}
         dataSource={visitFilter}
         rowKey="_id"
+        locale={{
+        emptyText: <Empty description="No hay datos para ese filtro" />,
+        }}
       />
-    </div>
+    </>
   );
 };
 

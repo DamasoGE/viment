@@ -28,7 +28,7 @@ const NewPropertyPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <>
       <h2 style={{ textAlign: 'center' }}>Añadir Nueva Propiedad</h2>
       <Form
         name="newProperty"
@@ -70,7 +70,7 @@ const NewPropertyPage: React.FC = () => {
           </Button>
         </Form.Item>
       </Form>
-    </div>
+    </>
   );
 };
 

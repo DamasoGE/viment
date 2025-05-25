@@ -1,134 +1,96 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu } from 'antd';
+import { Row, Col } from 'antd';
 import {
+  CalendarOutlined,
   EyeOutlined,
   HomeOutlined,
   KeyOutlined,
   StarOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { AiOutlineCaretLeft, AiOutlineCaretRight } from 'react-icons/ai';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import type { MenuProps } from 'antd';
 
-const { Sider } = Layout;
+const iconSize = 32;
+
+const pathToKeyMap: Record<string, string> = {
+  '/': 'agenda',
+  '/seller': 'seller',
+  '/property': 'property',
+  '/visit': 'visit',
+  '/asesor': 'asesor',
+  '/login': 'login',
+};
 
 const SiderBar: React.FC = () => {
   const { isAuth } = useAuth();
   const location = useLocation();
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [selectedKey, setSelectedKey] = useState<string>('');
-
   const [isAdmin, setAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const value = localStorage.getItem("admin");
-    if (value === "true") {
-      setAdmin(true);
-    } else {
-      setAdmin(false);
-    }
-  }, [isAdmin]);
-  
+    const value = localStorage.getItem('admin');
+    setAdmin(value === 'true');
+  }, []);
 
-  useEffect(() => {
-    switch (location.pathname) {
-      case '/seller':
-        setSelectedKey('1');
-        break;
-      case '/property':
-        setSelectedKey('2');
-        break;
-      case '/visit':
-        setSelectedKey('3');
-        break;
-      case '/asesor':
-        setSelectedKey('4');
-        break;
-      case '/login':
-        setSelectedKey('login');
-        break;
-      default:
-        setSelectedKey('');
-    }
-  }, [location]);
+  const selectedKey = pathToKeyMap[location.pathname] || '';
 
-  const toggleCollapsed = () => {
-    setCollapsed(!collapsed);
-  };
-
-  const menuItems: MenuProps['items'] = isAuth
+  const items = isAuth
     ? [
-        {
-          key: '1',
-          icon: <UserOutlined />,
-          label: <Link to="/seller">Clientes</Link>,
-        },
-        {
-          key: '2',
-          icon: <HomeOutlined />,
-          label: <Link to="/property">Propiedades</Link>,
-        },
-        {
-          key: '3',
-          icon: <EyeOutlined />,
-          label: <Link to="/visit">Visitas</Link>,
-        },
-        ...( isAdmin
-          ? [
-              {
-
-                key: '4',
-                icon: <StarOutlined />,
-                label: <Link to="/asesor">Asesores</Link>,
-              },
-            ]
-          : []),
+        { key: 'agenda', icon: <CalendarOutlined style={{ fontSize: iconSize }} />, label: 'Agenda', path: '/' },
+        { key: 'seller', icon: <UserOutlined style={{ fontSize: iconSize }} />, label: 'Clientes', path: '/seller' },
+        { key: 'property', icon: <HomeOutlined style={{ fontSize: iconSize }} />, label: 'Propiedades', path: '/property' },
+        { key: 'visit', icon: <EyeOutlined style={{ fontSize: iconSize }} />, label: 'Visitas', path: '/visit' },
+        ...(isAdmin ? [{ key: 'asesor', icon: <StarOutlined style={{ fontSize: iconSize }} />, label: 'Asesores', path: '/asesor' }] : []),
       ]
-    : [
-        {
-          key: 'login',
-          icon: <KeyOutlined />,
-          label: <Link to="/login">Iniciar Sesión</Link>,
-        },
-      ];
-
+    : [{ key: 'login', icon: <KeyOutlined style={{ fontSize: iconSize }} />, label: 'Entrar', path: '/login' }];
 
   return (
-    <Sider
-      collapsible
-      collapsed={collapsed}
-      onCollapse={toggleCollapsed}
-      trigger={null}
+    <div
+      style={{
+        height: '100%',
+        paddingTop: 16,
+        boxSizing: 'border-box',
+        position: 'relative',
+      }}
     >
-      <div style={{ position: 'sticky', top: 70, zIndex: 1, overflow: 'hidden' }}>
-        <div
-          style={{
-            position: 'absolute',
-            color: 'white',
-            top: '2px',
-            right: '-10px',
-            fontSize: '30px',
-            padding: '5px',
-            cursor: 'pointer',
-            zIndex: 10,
-          }}
-          onClick={toggleCollapsed}
-        >
-          {collapsed ? <AiOutlineCaretRight /> : <AiOutlineCaretLeft />}
-        </div>
 
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          onClick={({ key }) => setSelectedKey(key)}
-        />
-      </div>
-    </Sider>
+      <Row
+        gutter={[0, 12]}
+        justify="center"
+        style={{ width: '100%', padding: '0 8px' }}
+      >
+        {items.map(({ key, icon, label, path }) => (
+          <Col
+            key={key}
+            span={24}
+            style={{
+              textAlign: 'center',
+              cursor: 'pointer',
+              backgroundColor: selectedKey === key ? '#1890ff' : 'transparent',
+              borderRadius: 6,
+              padding: '8px 0',
+              transition: 'background-color 0.3s',
+              userSelect: 'none',
+            }}
+          >
+            <Link
+              to={path}
+              style={{
+                color: '#fff',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                fontSize: 12,
+              }}
+            >
+              {icon}
+              <span style={{ marginTop: 5 }}>{label}</span>
+            </Link>
+          </Col>
+        ))}
+      </Row>
+    </div>
   );
 };
 

@@ -1,41 +1,49 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Card,
-  Descriptions,
   Divider,
   Result,
   Button,
-  Spin,
   Typography,
   Collapse,
   message,
-  Popconfirm
+  Popconfirm,
+  Row,
+  Col,
+  Tooltip
 } from 'antd';
-import useProperty from '../hooks/useProperty';
-import useVisit from '../hooks/useVisit';
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import useProperty, { Property } from '../hooks/useProperty';
+import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import PropertyAdSection from '../components/PropertyAdSection';
 import PropertyVisitSection from '../components/PropertyVisitSection';
 import PropertyDocumentSection from '../components/PropertyDocumentSection';
 import { useNavigate } from 'react-router-dom';
+import { HeaderPageContainer } from '../styles/theme';
+import CenteredSpin from '../components/CenteredSpin';
+
+
+
 
 const PropertyDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { properties, loading, updateProperty, deleteProperty } = useProperty();
+  const { fetchPropertyById, loading, updateProperty, deleteProperty } = useProperty();
+  const [property, setProperty] = useState<Property | null>()
   const navigate = useNavigate();
-  const { visits, loading: loadingVisits } = useVisit();
+  const { Text } = Typography;
 
-  const property = useMemo(() => {
-    return properties.find((p) => p._id === id) || null;
-  }, [properties, id]);
+  useEffect(() => {
+      const aux = async () => {
+        if (id) {
+          const propertyFetch = await fetchPropertyById(id);
+          setProperty(propertyFetch);
+        }
+      };
+      aux();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const propertyVisits = useMemo(() => {
-    
-    return visits
-      .filter((v) => v.property._id === id)
-      .sort((a, b) => new Date(a.appointment).getTime() - new Date(b.appointment).getTime());
-  }, [visits, id]);
+
 
 const handleDeleteProperty = async () => {
   if (!property?._id) return;
@@ -54,14 +62,12 @@ const handleDeleteProperty = async () => {
   }
 };
 
-  // States
   const [timesOffered, setTimesOffered] = useState<number>(property?.timesOffered || 0);
   const [timesListed, setTimesListed] = useState<number>(property?.timesListed || 0);
   const [timesInterested, setTimesInterested] = useState<number>(property?.timesInterested || 0);
   const [timesDetailView, setTimesDetailView] = useState<number>(property?.timesDetailView || 0);
   const [ads, setAds] = useState<string[]>(property?.ads || []);
 
-  // Sync on property change
   useEffect(() => {
     if (property) {
       setTimesOffered(property.timesOffered || 0);
@@ -72,7 +78,6 @@ const handleDeleteProperty = async () => {
     }
   }, [property]);
 
-  // Método general para cambiar contadores
   const changeCounter = async (field: string, value: number, setValue: React.Dispatch<React.SetStateAction<number>>) => {
     if (!property?._id) return;
     const newValue = Math.max(0, value);
@@ -80,16 +85,46 @@ const handleDeleteProperty = async () => {
     await updateProperty(property._id, field, newValue.toString());
   };
 
-  // Visitas completadas
+  const renderCounter = (
+  label: string,
+  value: number,
+  field: keyof Property,
+  setter: React.Dispatch<React.SetStateAction<number>>
+) => (
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <span style={{ fontWeight: 500 }}>{value}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 8 }}>
+      <Tooltip title={`Aumentar ${label.toLowerCase()}`}>
+        <Button
+          icon={<UpOutlined />}
+          onClick={() => changeCounter(field, value + 1, setter)}
+          size="small"
+          type="default"
+          style={{ padding: '0 6px', height: 15, width: 15 }}
+        />
+      </Tooltip>
+      <Tooltip title={`Disminuir ${label.toLowerCase()}`}>
+        <Button
+          icon={<DownOutlined />}
+          onClick={() => changeCounter(field, value - 1, setter)}
+          size="small"
+          type="default"
+          style={{ padding: '0 6px', height: 15, width: 15 }}
+          disabled={value <= 0}
+        />
+      </Tooltip>
+    </div>
+  </div>
+);
+
   const getTimesVisited = (): number => {
-    return visits.filter(v => v.property._id === id && v.status === 'completed').length;
+    if (!property || !property.visits) return 0;
+    return property.visits.filter(v => v.status === 'completed').length;
   };
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Spin size="large" tip="Cargando propiedad..." />
-      </div>
+      <CenteredSpin tipText='Cargando Propiedad...'/>
     );
   }
 
@@ -109,9 +144,9 @@ const handleDeleteProperty = async () => {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+
+    <>
+    <HeaderPageContainer>
       <h1 style={{ margin: 0 }}>Información de la propiedad</h1>
       <Popconfirm
         title="¿Estás seguro de borrar esta propiedad? Se eliminarán también las visitas asociadas"
@@ -123,97 +158,71 @@ const handleDeleteProperty = async () => {
           Borrar Propiedad
         </Button>
       </Popconfirm>
-    </div>
+    </HeaderPageContainer>
 
-  <Card>
-    <Descriptions column={1}>
-      <Descriptions.Item label="Dirección">{property.address}</Descriptions.Item>
 
-      <Descriptions.Item label="Vendedor">
-        {property.seller ? (
-          <Link to={`/seller/${property.seller._id}`}>{property.seller.username}</Link>
-        ) : (
-          'No asignado'
-        )}
-      </Descriptions.Item>
 
-      {/* Veces Detalle */}
-      <Descriptions.Item label="Vistas Detalle">
-        <Button
-          icon={<MinusOutlined />}
-          onClick={() => changeCounter('timesDetailView', timesDetailView - 1, setTimesDetailView)}
-          style={{ marginRight: 8, height: '20px' }}
-          disabled={timesDetailView <= 0}
-        />
-        {timesDetailView}
-        <Button
-          icon={<PlusOutlined />}
-          onClick={() => changeCounter('timesDetailView', timesDetailView + 1, setTimesDetailView)}
-          style={{ marginLeft: 8, height: '20px' }}
-        />
-      </Descriptions.Item>
+<Card style={{ padding: 16 }}>
 
-      {/* Veces Interesado */}
-      <Descriptions.Item label="Veces Interesado">
-        <Button
-          icon={<MinusOutlined />}
-          onClick={() => changeCounter('timesInterested', timesInterested - 1, setTimesInterested)}
-          style={{ marginRight: 8, height: '20px' }}
-          disabled={timesInterested <= 0}
-        />
-        {timesInterested}
-        <Button
-          icon={<PlusOutlined />}
-          onClick={() => changeCounter('timesInterested', timesInterested + 1, setTimesInterested)}
-          style={{ marginLeft: 8, height: '20px' }}
-        />
-      </Descriptions.Item>
+  <Row gutter={[16, 12]}>
+    <Col span={12}>
+      <Text strong>Dirección:</Text><br />
+      <Text>{property.address}</Text>
+    </Col>
 
-      {/* Veces Listada */}
-      <Descriptions.Item label="Veces Listada">
-        <Button
-          icon={<MinusOutlined />}
-          onClick={() => changeCounter('timesListed', timesListed - 1, setTimesListed)}
-          style={{ marginRight: 8, height: '20px' }}
-          disabled={timesListed <= 0}
-        />
-        {timesListed}
-        <Button
-          icon={<PlusOutlined />}
-          onClick={() => changeCounter('timesListed', timesListed + 1, setTimesListed)}
-          style={{ marginLeft: 8, height: '20px' }}
-        />
-      </Descriptions.Item>
+    <Col span={12}>
+      <Text strong>Vendedor:</Text><br />
+      {property.seller ? (
+        <Link to={`/seller/${property.seller._id}`}>{property.seller.username}</Link>
+      ) : (
+        <Text>No asignado</Text>
+      )}
+    </Col>
 
-      {/* Veces Ofrecida */}
-      <Descriptions.Item label="Veces Ofrecida">
-        <Button
-          icon={<MinusOutlined />}
-          onClick={() => changeCounter('timesOffered', timesOffered - 1, setTimesOffered)}
-          style={{ marginRight: 8, height: '20px' }}
-          disabled={timesOffered <= 0}
-        />
-        {timesOffered}
-        <Button
-          icon={<PlusOutlined />}
-          onClick={() => changeCounter('timesOffered', timesOffered + 1, setTimesOffered)}
-          style={{ marginLeft: 8, height: '20px' }}
-        />
-      </Descriptions.Item>
+    
+    <Divider/>
+    {/* Contadores */}
+    <Col span={12}>
+      <Text strong>Vistas Detalle:</Text><br />
+      {renderCounter('Vistas Detalle', timesDetailView, 'timesDetailView', setTimesDetailView)}
+    </Col>
 
-      {/* Veces Visitada (solo lectura) */}
-      <Descriptions.Item label="Veces Visitada">
-        {getTimesVisited()}
-      </Descriptions.Item>
+    <Col span={12}>
+      <Text strong>Veces Interesado:</Text><br />
+      {renderCounter('Veces Interesado', timesInterested, 'timesInterested', setTimesInterested)}
+    </Col>
 
-      {/* Fecha de registro */}
-      <Descriptions.Item label="Fecha de Registro">
+    <Col span={12}>
+      <Text strong>Veces Listada:</Text><br />
+      {renderCounter('Veces Listada', timesListed, 'timesListed', setTimesListed)}
+    </Col>
+
+    <Col span={12}>
+      <Text strong>Veces Ofrecida:</Text><br />
+      {renderCounter('Veces Ofrecida', timesOffered, 'timesOffered', setTimesOffered)}
+    </Col>
+
+    {/* Solo lectura */}
+    <Col span={12}>
+      <Text strong>Veces Visitada:</Text><br />
+      <Text>{getTimesVisited()}</Text>
+    </Col>
+
+    <Col span={12}>
+      <Text strong>Fecha de Registro:</Text><br />
+      <Text>
         {property.createdAt
-          ? new Date(property.createdAt).toLocaleDateString()
+          ? new Date(property.createdAt).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            })
           : 'No disponible'}
-      </Descriptions.Item>
-    </Descriptions>
-  </Card>
+      </Text>
+    </Col>
+  </Row>
+</Card>
+
 
 
       <Divider />
@@ -227,13 +236,11 @@ const handleDeleteProperty = async () => {
         </Collapse.Panel>
 
         <Collapse.Panel header="Visitas a esta propiedad" key="3">
-          {loadingVisits ? (
-            <Spin tip="Cargando visitas..." />
-          ) : propertyVisits.length === 0 ? (
+          { property.visits?.length === 0 ? (
             <Typography.Text type="secondary">No hay visitas registradas.</Typography.Text>
           ) : (
             <PropertyVisitSection
-              propertyVisits={propertyVisits}
+              propertyVisits={property.visits}
               propertyId={property._id as string}
             />
           )}
@@ -251,7 +258,7 @@ const handleDeleteProperty = async () => {
           Volver a la lista de propiedades
         </Link>
       </Button>
-    </div>
+    </>
   );
 };
 

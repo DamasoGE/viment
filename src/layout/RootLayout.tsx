@@ -4,41 +4,37 @@ import { Layout } from "antd";
 import SiderBar from "../components/SiderBar";
 import HeaderBar from "../components/HeaderBar";
 import FooterBar from "../components/FooterBar";
-import { useAuth } from "../hooks/useAuth";
-import useAsesor from "../hooks/useAsesor";
+import { ScrollContainer } from "../styles/theme";
 
-const { Content } = Layout;
+const { Sider, Footer } = Layout;
 
 const RootLayout: React.FC = () => {
-  const { isAuth } = useAuth();
-  const { isAdmin } = useAsesor();
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      {/* Header */}
-      <div style={{ position: "sticky", top: 0, zIndex: 1 }}>
-        <HeaderBar />
-      </div>
 
+    <Layout style={{ height: "100vh" }}>
+
+      {/* HEADER */}
+      <HeaderBar />
+
+      {/* MAIN: Sider + Outlet */}
       <Layout>
-        <SiderBar key={`${isAuth}-${isAdmin}`} /> {/* La key sirve para que al haber un cambio en esta se vuelva a renderizar el componente */}
-        <Layout style={{ flex: 1 }}>
-          <Content
-            style={{
-              overflowY: "auto",
-              height: "100%",
-              padding: "16px",
-            }}
-          >
-            <Outlet />
-          </Content>
-        </Layout>
+        
+        <Sider width={100}>
+          <SiderBar/>
+        </Sider>
+
+        <ScrollContainer>
+          <Outlet />
+        </ScrollContainer>
+
       </Layout>
 
-      {/* Footer */}
-      <div style={{ position: "sticky", bottom: 0, zIndex: 1 }}>
+      {/* FOOTER */}
+      <Footer style={{ textAlign: "center", padding: "8px 16px" }}>
         <FooterBar />
-      </div>
+      </Footer>
+
     </Layout>
   );
 };

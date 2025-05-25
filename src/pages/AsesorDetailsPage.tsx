@@ -1,25 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Card, Descriptions, Result, Button, Spin, Divider, Popconfirm, message } from 'antd';
+import { Card, Descriptions, Result, Button, Divider, Popconfirm, message } from 'antd';
 import useAsesor, { Asesor } from '../hooks/useAsesor';
+import { HeaderPageContainer } from '../styles/theme';
+import { useAuth } from '../hooks/useAuth';
+import CenteredSpin from '../components/CenteredSpin';
 
 const AsesorDetailsPage: React.FC = () => {
+
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { fetchAsesorById, loading, deleteAsesor, user } = useAsesor(); // <-- obtener user logueado
+  const { fetchAsesorById, loading, deleteAsesor, user } = useAsesor();
   const [asesor, setAsesor] = useState<Asesor | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+
+  const isSelf = user?._id === id;
 
   useEffect(() => {
-    const aux = async () => {
-      if (id) {
-        const asesorfetch = await fetchAsesorById(id);
-        setAsesor(asesorfetch);
-      }
-    };
-    aux();
+    if (!isAdmin) {
+      navigate('/error', { replace: true });
+    }
+  }, [isAdmin, navigate]);
+
+  useEffect(() => {
+      const aux = async () => {
+        if (id) {
+          const asesorfetch = await fetchAsesorById(id);
+          setAsesor(asesorfetch);
+        }
+      };
+      aux();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const confirmDelete = async () => {
     if (!id) return;
@@ -36,9 +50,7 @@ const AsesorDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Spin size="large" tip="Cargando información del asesor..." />
-      </div>
+      <CenteredSpin tipText='Cargando Asesor...'/>
     );
   }
 
@@ -53,12 +65,11 @@ const AsesorDetailsPage: React.FC = () => {
     );
   }
 
-  // Validamos si es el usuario logueado para evitar borrar a sí mismo
-  const isSelf = user?._id === id;
+
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <>
+      <HeaderPageContainer>
         <h1>Detalles del Asesor</h1>
 
         {!isSelf && (
@@ -74,7 +85,7 @@ const AsesorDetailsPage: React.FC = () => {
             </Button>
           </Popconfirm>
         )}
-      </div>
+      </HeaderPageContainer>
 
       <Card>
         <Descriptions column={1}>
@@ -90,7 +101,7 @@ const AsesorDetailsPage: React.FC = () => {
           Volver a la lista de asesores
         </Link>
       </Button>
-    </div>
+    </>
   );
 };
 

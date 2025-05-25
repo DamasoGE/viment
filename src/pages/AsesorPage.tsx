@@ -1,23 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Table, Space, Switch, Spin } from 'antd';
+import { Button, Input, Table, Space, Switch, Empty } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
-import useAsesor, { Asesor } from '../hooks/useAsesor';
 import { ColumnsType } from 'antd/es/table';
 import { IoSearchCircleOutline } from 'react-icons/io5';
+import { SettingOutlined } from '@ant-design/icons';
+import { HeaderPageContainer } from '../styles/theme';
+import CenteredSpin from '../components/CenteredSpin';
+import { useAuth } from '../hooks/useAuth';
+import useAsesor, { Asesor } from '../hooks/useAsesor';
 
 const AsesorPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
 
-  const { asesors, loading, error, fetchAllAsesores, updateAsesor, user } = useAsesor(); 
+  const {
+    asesors,
+    loading,
+    fetchAllAsesores,
+    updateAsesor,
+  } = useAsesor();
 
   const [asesorFilter, setAsesorFilter] = useState<Asesor[]>([]);
 
   useEffect(() => {
-    const aux = async () => {
-        await fetchAllAsesores();
+    if (!isAdmin) {
+      navigate('/error', { replace: true });
     }
-    aux();
+  }, [isAdmin, navigate]);
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchAllAsesores();
+    };
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -29,25 +45,35 @@ const AsesorPage: React.FC = () => {
       );
       setAsesorFilter(filtered);
     } else {
-      setAsesorFilter(asesors); 
+      setAsesorFilter(asesors);
     }
-  },[searchTerm, asesors]);
+  }, [asesors, searchTerm]);
 
   const handleAdminChange = async (asesorId: string, adminStatus: boolean) => {
-    try {
-      if (!asesorId) {
-        console.error("ID del asesor no encontrado");
-        return;
-      }
-      await updateAsesor(asesorId, { admin: adminStatus });
-      // Recargar los asesores después de actualizar
-      fetchAllAsesores();
-    } catch (error) {
-      console.error('Error al cambiar el estado de administrador:', error);
+    if (!asesorId) {
+      console.error("ID del asesor no encontrado");
+      return;
+    }
+    const success = await updateAsesor(asesorId, { admin: adminStatus });
+    if (success) {
+      await fetchAllAsesores();
     }
   };
 
   const columns: ColumnsType<Asesor> = [
+    {
+      title: 'Acciones',
+      width: 100,
+      align: 'center',
+      key: 'actions',
+      render: (_, asesor) => (
+        <Space>
+          <Link to={`/asesor/${asesor._id}`}>
+            <SettingOutlined style={{ color: "black", fontSize: "18px" }} />
+          </Link>
+        </Space>
+      ),
+    },
     {
       title: 'Nombre de Usuario',
       dataIndex: 'username',
@@ -57,80 +83,55 @@ const AsesorPage: React.FC = () => {
       title: 'Administrador',
       dataIndex: 'admin',
       key: 'admin',
-      render: (admin: boolean, asesor) => (
-        <Switch 
-          checked={admin} 
-          onChange={(checked: boolean) => {
-            // Verificar si el ID del asesor es el mismo que el del usuario actual
-            if (asesor._id && asesor._id !== user?._id) {
-              handleAdminChange(asesor._id, checked);
-            }
-          }} 
-          disabled={asesor._id === user?._id} // Deshabilitar si es el propio usuario
-        />
-      ),
-    },
-    {
-      title: 'Acciones',
-      key: 'actions',
-      render: (_, asesor) => (
-        <Space size="middle">
-          <Link to={`/asesor/${asesor._id}`}>
-            Ver detalles
-          </Link>
-        </Space>
-      ),
+      render: (admin: boolean, asesor) => {
+        const isSelf = asesor._id === user?._id;
+        return (
+          <Switch
+            checked={admin}
+            onChange={(checked: boolean) => {
+              if (!isSelf && asesor._id) {
+                handleAdminChange(asesor._id, checked);
+              }
+            }}
+            disabled={isSelf}
+          />
+        );
+      },
     },
   ];
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-      <Spin tip="Cargando visita...">
-        <div style={{ width: 200, height: 100 }} />
-      </Spin>
-    </div>
-  ) 
-  }
-
-  if (error) {
-    navigate('/error');
-    return null;
+    return <CenteredSpin tipText='Cargando Asesores...' />;
   }
 
   return (
-    <div style={{ padding: 20 }}>
-<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-  <Input
-    placeholder="Buscar por username o administrador"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
-    style={{
-      width: 320,
-      height: 40,
-      backgroundColor: '#fff',
-      borderRadius: 8,
-      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
-      marginBottom: 0,
-    }}
-  />
-
-  <Button
-    type="primary"
-    style={{ height: 40, marginLeft: 16 }}
-    onClick={() => navigate('/asesor/new')}
-  >
-    Crear Nuevo Asesor
-  </Button>
-</div>
+    <>
+      <HeaderPageContainer>
+        <Input
+          placeholder="Buscar por username o administrador"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
+          style={{ width: 320 }}
+        />
+        <Button
+          type="primary"
+          style={{ height: 40 }}
+          onClick={() => navigate('/asesor/new')}
+        >
+          Crear Nuevo Asesor
+        </Button>
+      </HeaderPageContainer>
 
       <Table
         columns={columns}
         dataSource={asesorFilter}
         rowKey="_id"
+        locale={{
+        emptyText: <Empty description="No hay datos para ese filtro" />,
+        }}
       />
-    </div>
+    </>
   );
 };
 

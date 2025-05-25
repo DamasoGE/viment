@@ -17,7 +17,7 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
-    setErrorMessage(null); // Limpiar el error si las contraseñas coinciden
+    setErrorMessage(null);
     setLoading(true);
 
     try {
@@ -37,7 +37,7 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <>
       <h2 style={{ textAlign: 'center' }}>Cambiar Contraseña</h2>
       <Form
         name="changePassword"
@@ -75,7 +75,7 @@ const ProfilePage: React.FC = () => {
           </Button>
         </Form.Item>
       </Form>
-    </div>
+    </>
   );
 };
 

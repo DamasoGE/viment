@@ -36,7 +36,7 @@ const NewVisitPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <>
       <h2 style={{ textAlign: 'center' }}>Añadir Nueva Visita</h2>
 
       {errorMsg && (
@@ -95,7 +95,7 @@ const NewVisitPage: React.FC = () => {
           </Button>
         </Form.Item>
       </Form>
-    </div>
+    </>
   );
 };
 

@@ -3,7 +3,7 @@ import RootLayout from "../layout/RootLayout";
 import { ROUTES } from "./paths";
 import SellerPage from "../pages/SellerPage";
 import LoginPage from "../pages/LoginPage";
-import HomePage from "../pages/HomePage";
+import HomePage from "../pages/AgendaPage";
 import PropertyPage from "../pages/PropertyPage";
 import VisitPage from "../pages/VisitPage";
 import PrivateLayout from "../layout/PrivateLayout";
@@ -26,7 +26,7 @@ const RouterLayout = () => {
       <Route element={<RootLayout />}>
 
         <Route element={<PrivateLayout />}>
-          <Route path={ROUTES.HOME} element={<HomePage />} />
+          <Route path={ROUTES.AGENDA} element={<HomePage />} />
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.SELLER}>
             <Route index element={<SellerPage />} />

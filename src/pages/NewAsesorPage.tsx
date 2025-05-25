@@ -3,8 +3,7 @@ import { Form, Input, Button, message, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import useAsesor from '../hooks/useAsesor';
 
-
-
+const { Title } = Typography;
 
 const NewAsesorPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -29,8 +28,8 @@ const NewAsesorPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2 style={{ textAlign: 'center' }}>Añadir Nuevo Asesor</h2>
+    <>
+      <Title level={2} style={{ textAlign: "center" }}>Añadir Nuevo Asesor</Title>
       <Form
         name="newAsesor"
         onFinish={onFinish}
@@ -41,7 +40,7 @@ const NewAsesorPage: React.FC = () => {
         <Form.Item
           label="Nombre de Usuario"
           name="username"
-          rules={[{ required: true, message: 'Por favor ingresa el nombre de usuario!' }]}
+          rules={[{ required: true, message: 'Por favor ingresa el nombre de usuario' }]}
         >
           <Input />
         </Form.Item>
@@ -63,7 +62,7 @@ const NewAsesorPage: React.FC = () => {
       </Form>
 
 
-    </div>
+    </>
   );
 };
 

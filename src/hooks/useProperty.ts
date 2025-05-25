@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Seller } from "./useSeller";
+import { Visit } from "./useVisit";
 
 const api = import.meta.env.VITE_BACKEND_API;
 
@@ -14,39 +15,60 @@ export interface Property {
   timesInterested?: number;
   timesDetailView?: number;
   createdAt?: Date;
+  visits: Visit[];
 }
 
 const useProperty = () => {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${api}/property`, {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) {
-          throw new Error("No se pudieron obtener las propiedades");
-        }
-        const data = await response.json();
-        setProperties(data);
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError("Error desconocido al obtener las propiedades");
-        }
-      } finally {
-        setLoading(false);
+  const fetchProperties = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${api}/property`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("No se pudieron obtener las propiedades");
       }
-    };
+      const data = await response.json();
+      setProperties(data);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Error desconocido al obtener las propiedades");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchProperties();
-  }, []);
+  const fetchPropertyById = async (propertyId: string): Promise<Property | null> => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${api}/property/${propertyId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Error al obtener la propiedad");
+      }
+      const data = await response.json();
+      return data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Error desconocido al obtener la propiedad");
+      }
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const createProperty = async (address: string, sellerId: string) => {
     setLoading(true);
@@ -65,8 +87,7 @@ const useProperty = () => {
       }
 
       const createdProperty = await response.json();
-
-      setProperties((prevProperties) => [...prevProperties, createdProperty]);
+      setProperties((prev) => [...prev, createdProperty]);
       return createdProperty;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -79,7 +100,11 @@ const useProperty = () => {
     }
   };
 
-  const updateProperty = async (propertyId: string, field: string, value: string | string[] | number) => {
+  const updateProperty = async (
+    propertyId: string,
+    field: string,
+    value: string | string[] | number
+  ) => {
     try {
       const response = await fetch(`${api}/property/${propertyId}`, {
         method: "PATCH",
@@ -96,10 +121,8 @@ const useProperty = () => {
 
       const updatedProperty = await response.json();
 
-      console.log(updatedProperty);
-
-      setProperties((prevProperties) =>
-        prevProperties.map((p) => (p._id === propertyId ? updatedProperty : p))
+      setProperties((prev) =>
+        prev.map((p) => (p._id === propertyId ? updatedProperty : p))
       );
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -111,34 +134,43 @@ const useProperty = () => {
   };
 
   const deleteProperty = async (propertyId: string) => {
-  setLoading(true);
-  try {
-    const response = await fetch(`${api}/property/${propertyId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    setLoading(true);
+    try {
+      const response = await fetch(`${api}/property/${propertyId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-    if (!response.ok) {
-      throw new Error("Error al eliminar la propiedad");
+      if (!response.ok) {
+        throw new Error("Error al eliminar la propiedad");
+      }
+
+      setProperties((prev) =>
+        prev.filter((property) => property._id !== propertyId)
+      );
+      return true;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Error desconocido al eliminar la propiedad");
+      }
+      return false;
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setProperties((prevProperties) =>
-      prevProperties.filter((property) => property._id !== propertyId)
-    );
-    return true;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      setError(error.message);
-    } else {
-      setError("Error desconocido al eliminar la propiedad");
-    }
-    return false;
-  } finally {
-    setLoading(false);
-  }
-};
-
-  return { properties, loading, error, createProperty, updateProperty, deleteProperty };
+  return {
+    properties,
+    loading,
+    error,
+    fetchProperties,
+    fetchPropertyById,
+    createProperty,
+    updateProperty,
+    deleteProperty,
+  };
 };
 
 export default useProperty;

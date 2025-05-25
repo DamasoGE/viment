@@ -1,32 +1,72 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Table, Space, Spin } from 'antd';
+import { Button, Input, Table, Space, Switch, Empty } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import useSeller, { Seller } from '../hooks/useSeller';
 import { ColumnsType } from 'antd/es/table';
 import { IoSearchCircleOutline } from 'react-icons/io5';
+import { SettingOutlined } from '@ant-design/icons';
+import { ContainerFlex, HeaderPageContainer, InputDiv } from '../styles/theme';
+import CenteredSpin from '../components/CenteredSpin';
 
 const SellerPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filterRequireAsesor, setFilterRequireAsesor] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const { sellers, loading, error } = useSeller();
-
+  const { sellers, loading, toggleRequireAsesor, fetchSellers } = useSeller();
   const [sellerFilter, setSellerFilter] = useState<Seller[]>([]);
 
   useEffect(() => {
-    if (searchTerm) {
+    const init = async () => {
+      await fetchSellers();
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-      const filtered = sellers.filter((seller) =>
+  useEffect(() => {
+    let filtered = sellers;
+
+    if (searchTerm) {
+      filtered = filtered.filter((seller) =>
         seller.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         seller.dni.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setSellerFilter(filtered);
-    } else {
-      setSellerFilter(sellers);
     }
-  }, [searchTerm, sellers]);
+
+    if (filterRequireAsesor) {
+      filtered = filtered.filter((seller) => seller.requireAsesor);
+    }
+
+    setSellerFilter(filtered);
+  }, [searchTerm, filterRequireAsesor, sellers]);
 
   const columns: ColumnsType<Seller> = [
+    {
+      title: 'Acciones',
+      width: 100,
+      align: 'center',
+      key: 'actions',
+      render: (_, seller) => (
+        <Space>
+          <Link to={`/seller/${seller._id}`}>
+            <SettingOutlined style={{ color: 'black', fontSize: '18px' }} />
+          </Link>
+        </Space>
+      ),
+    },
+    {
+      title: 'Requiere Asesor',
+      width: 100,
+      key: 'requireAsesor',
+      align: 'center',
+      render: (_, seller) => (
+        <Switch
+          checked={seller.requireAsesor}
+          onChange={() => toggleRequireAsesor(seller._id!)}
+        />
+      ),
+    },
     {
       title: 'Nombre de Usuario',
       dataIndex: 'username',
@@ -37,70 +77,52 @@ const SellerPage: React.FC = () => {
       dataIndex: 'dni',
       key: 'dni',
     },
-    {
-      title: 'Acciones',
-      key: 'actions',
-      render: (_, seller) => (
-        <Space size="middle">
-          <Link to={`/seller/${seller._id}`}>
-            Ver detalles
-          </Link>
-        </Space>
-      ),
-    },
   ];
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-      <Spin tip="Cargando visita...">
-        <div style={{ width: 200, height: 100 }} />
-      </Spin>
-    </div>
-  ) 
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
+    return <CenteredSpin tipText="Cargando Vendedores..." />;
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-  <Input
-    placeholder="Buscar por username o DNI"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
-    style={{
-      width: 320,
-      height: 40, // altura fija para alinear con el botón
-      backgroundColor: '#fff',
-      borderRadius: 8,
-      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
-      marginBottom: 0,
-    }}
-  />
+    <>
+      <HeaderPageContainer style={{ flexWrap: 'wrap', gap: 12 }}>
+        <ContainerFlex>
+          <Input
+            placeholder="Buscar por username o DNI"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
+            style={{ width: 320 }}
+          />
 
-  <Button
-    type="primary"
-    style={{
-      height: 40, // igual que el Input
-      marginLeft: 16, // separación opcional
-    }}
-    onClick={() => navigate('/seller/new')}
-  >
-    Crear Nuevo Vendedor
-  </Button>
-</div>
+          <InputDiv>
+            <span>Requiere asesor:</span>
+            <Switch
+              checked={filterRequireAsesor}
+              onChange={(checked) => setFilterRequireAsesor(checked)}
+              style={{ marginLeft: 12 }}
+            />
+          </InputDiv>
+        </ContainerFlex>
 
+        <Button
+          type="primary"
+          style={{ height: 40 }}
+          onClick={() => navigate('/seller/new')}
+        >
+          Crear Nuevo Vendedor
+        </Button>
+      </HeaderPageContainer>
 
-      <Table
-        columns={columns}
+      <Table 
+        columns={columns} 
         dataSource={sellerFilter} 
-        rowKey="dni"
-      />
-    </div>
+        rowKey="_id" 
+        locale={{
+          emptyText: <Empty description="No hay datos para ese filtro" />,
+        }}
+        />
+    </>
   );
 };
 

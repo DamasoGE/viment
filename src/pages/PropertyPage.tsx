@@ -1,26 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Table, Space, Tooltip, Spin } from 'antd';
+import { Button, Input, Table, Space, Tooltip, Empty } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import useProperty, { Property } from '../hooks/useProperty';
 import useVisit from '../hooks/useVisit';
 import { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { UpOutlined, DownOutlined, SettingOutlined } from '@ant-design/icons';
 import { IoSearchCircleOutline } from 'react-icons/io5';
+import CenteredSpin from '../components/CenteredSpin';
+import { HeaderPageContainer } from '../styles/theme';
 
 const PropertyPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
 
-  const { properties, loading, error, updateProperty } = useProperty();
-  const { visits } = useVisit();
+  const { properties, fetchProperties, loading: loadingProperties, updateProperty } = useProperty();
+  const { visits, loading: loadingVisits, fetchVisits } = useVisit();
 
   const [propertyFilter, setPropertyFilter] = useState<Property[]>([]);
+
+  useEffect(() => {
+    const initProperties = async () => {
+      await fetchProperties();
+    };
+    initProperties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const initVisits = async () => {
+      await fetchVisits();
+    };
+    initVisits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (searchTerm) {
       const filtered = properties.filter((property) =>
         property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (property.seller?.username?.toLowerCase().includes(searchTerm.toLowerCase()))
+        (property.seller?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
       );
       setPropertyFilter(filtered);
     } else {
@@ -28,8 +46,8 @@ const PropertyPage: React.FC = () => {
     }
   }, [searchTerm, properties]);
 
-  const changeCounter = async (property: Property, field: string, delta: number) => {
-    const current = property[field as keyof Property] as number || 0;
+  const changeCounter = async (property: Property, field: keyof Property, delta: number) => {
+    const current = (property[field] as number) || 0;
     const newValue = Math.max(0, current + delta);
     await updateProperty(property._id!, field, newValue.toString());
   };
@@ -55,7 +73,7 @@ const PropertyPage: React.FC = () => {
     ).length;
   };
 
-  const sortedProperties = propertyFilter.sort((a, b) => {
+  const sortedProperties = [...propertyFilter].sort((a, b) => {
     const nextVisitA = getNextVisit(a._id!);
     const nextVisitB = getNextVisit(b._id!);
     if (!nextVisitA) return 1;
@@ -65,148 +83,164 @@ const PropertyPage: React.FC = () => {
 
   const counterColumn = (title: string, field: keyof Property): ColumnsType<Property>[number] => ({
     title,
-    key: field,
-    render: (_, property) => (
-      <Space size="middle">
-        <Tooltip title={`Disminuir ${title.toLowerCase()}`}>
-          <Button
-            icon={<MinusOutlined />}
-            onClick={() => changeCounter(property, field, -1)}
-            disabled={!property[field]}
-          />
-        </Tooltip>
-        <span>{Number(property[field] ?? 0)}</span>
-        <Tooltip title={`Aumentar ${title.toLowerCase()}`}>
-          <Button
-            icon={<PlusOutlined />}
-            onClick={() => changeCounter(property, field, 1)}
-          />
-        </Tooltip>
-      </Space>
-    ),
+    key: field as string,
+    render: (_, property) => {
+      const value = Number(property[field] ?? 0);
+      return (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <span style={{ fontWeight: 500 }}>{value}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 8 }}>
+            <Tooltip title={`Aumentar ${title.toLowerCase()}`}>
+              <Button
+                icon={<UpOutlined />}
+                onClick={() => changeCounter(property, field, 1)}
+                size="small"
+                type="default"
+                style={{ padding: '0 6px', height: 15, width: 15 }}
+              />
+            </Tooltip>
+            <Tooltip title={`Disminuir ${title.toLowerCase()}`}>
+              <Button
+                icon={<DownOutlined />}
+                onClick={() => changeCounter(property, field, -1)}
+                size="small"
+                type="default"
+                style={{ padding: '0 6px', height: 15, width: 15 }}
+                disabled={value === 0}
+              />
+            </Tooltip>
+          </div>
+        </div>
+      );
+    },
   });
 
   const columns: ColumnsType<Property> = [
-  {
-    title: 'Dirección',
-    dataIndex: 'address',
-    key: 'address',
-  },
-  {
-    title: 'Vendedor',
-    dataIndex: 'seller',
-    key: 'seller',
-    render: (_, property) =>
-      property.seller ? (
-        <Link to={`/seller/${property.seller._id}`}>
-          {property.seller.username}
-        </Link>
-      ) : (
-        'No asignado'
+    {
+      title: 'Acciones',
+      width: 100,
+      align: 'center',
+      key: 'actions',
+      render: (_, property) => (
+        <Space>
+          <Link to={`/property/${property._id!}`}>
+            <SettingOutlined style={{ color: "black", fontSize: "18px" }} />
+          </Link>
+        </Space>
       ),
-  },
-  counterColumn('Vistas Detalle', 'timesDetailView'),
-  counterColumn('Veces Interesado', 'timesInterested'),
-  counterColumn('Veces Listada', 'timesListed'),
-  counterColumn('Veces Ofrecida', 'timesOffered'),
-  {
-    title: 'Veces Visitada',
-    key: 'calculatedTimesVisited',
-    render: (_, property) => (
-      <span>{getTimesVisited(property._id!)}</span>
-    ),
-  },
-  {
-    title: 'Próxima Visita',
-    key: 'nextVisit',
-    render: (_, property) => {
-      const nextVisit = getNextVisit(property._id!);
-      return nextVisit ? (
-        <Link to={`/visit/${nextVisit._id}`}>
-          {new Date(nextVisit.appointment).toLocaleString()}
-        </Link>
-      ) : (
-        'No hay visitas programadas'
-      );
     },
-  },
-  {
-    title: 'Última Visita',
-    key: 'previousVisit',
-    render: (_, property) => {
-      const previousVisit = getPreviousVisit(property._id!);
-      return previousVisit ? (
-        <Link to={`/visit/${previousVisit._id}`}>
-          {new Date(previousVisit.appointment).toLocaleString()}
-        </Link>
-      ) : (
-        'No hay visitas anteriores'
-      );
+    {
+      title: 'Dirección',
+      dataIndex: 'address',
+      key: 'address',
     },
-  },
-  {
-    title: 'Acciones',
-    key: 'actions',
-    render: (_, property) => (
-      <Space size="middle">
-        <Link to={`/property/${property._id}`}>
-          Ver detalles
-        </Link>
-      </Space>
-    ),
-  },
-];
+    {
+      title: 'Vendedor',
+      dataIndex: 'seller',
+      key: 'seller',
+      render: (_, property) =>
+        property.seller ? (
+          <Link to={`/seller/${property.seller._id!}`}>
+            {property.seller.username}
+          </Link>
+        ) : (
+          'No asignado'
+        ),
+    },
+    counterColumn('Vistas Detalle', 'timesDetailView'),
+    counterColumn('Veces Interesado', 'timesInterested'),
+    counterColumn('Veces Listada', 'timesListed'),
+    counterColumn('Veces Ofrecida', 'timesOffered'),
+    {
+      title: 'Veces Visitada',
+      key: 'calculatedTimesVisited',
+      render: (_, property) => (
+        <span>{getTimesVisited(property._id!)}</span>
+      ),
+    },
+    {
+      title: 'Próxima Visita',
+      key: 'nextVisit',
+      render: (_, property) => {
+        const nextVisit = getNextVisit(property._id!);
+        return nextVisit ? (
+          <Link to={`/visit/${nextVisit._id!}`}>
+            {"📅 " + new Date(nextVisit.appointment).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            }) + "     ⌚" + new Date(nextVisit.appointment).toLocaleTimeString(undefined, {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            })}
+          </Link>
+        ) : (
+          'No hay visitas programadas'
+        );
+      },
+    },
+    {
+      title: 'Última Visita',
+      key: 'previousVisit',
+      render: (_, property) => {
+        const previousVisit = getPreviousVisit(property._id!);
+        return previousVisit ? (
+          <Link to={`/visit/${previousVisit._id!}`}>
+            {"📅 " + new Date(previousVisit.appointment).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            }) + "     ⌚" + new Date(previousVisit.appointment).toLocaleTimeString(undefined, {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            })}
+          </Link>
+        ) : (
+          'No hay visitas anteriores'
+        );
+      },
+    },
+  ];
 
-
-  if (loading) {
+  if (loadingVisits || loadingProperties) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Spin tip="Cargando visita...">
-          <div style={{ width: 200, height: 100 }} />
-        </Spin>
-      </div>
+      <CenteredSpin tipText='Cargando Propiedades...' />
     );
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
-    <div style={{ padding: 20 }}>
-
-<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-  <Input
-    placeholder="Buscar por dirección o vendedor"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
-    style={{
-      width: 320,
-      height: 40,
-      backgroundColor: '#fff',
-      borderRadius: 8,
-      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
-      marginBottom: 0,
-    }}
-  />
-
-  <Button
-    type="primary"
-    style={{ height: 40, marginLeft: 16 }}
-    onClick={() => navigate('/property/new')}
-  >
-    Crear Nueva Propiedad
-  </Button>
-</div>
+    <>
+      <HeaderPageContainer>
+        <Input
+          placeholder="Buscar por dirección o vendedor"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          prefix={<IoSearchCircleOutline style={{ color: '#666', fontSize: 30 }} />}
+          style={{
+            width: 320,
+          }}
+        />
+        <Button
+          type="primary"
+          style={{ height: 40 }}
+          onClick={() => navigate('/property/new')}
+        >
+          Crear Nueva Propiedad
+        </Button>
+      </HeaderPageContainer>
 
       <Table
         columns={columns}
         dataSource={sortedProperties}
         rowKey="_id"
         scroll={{ x: true }}
+        locale={{
+        emptyText: <Empty description="No hay datos para ese filtro" />,
+        }}
       />
-    </div>
+    </>
   );
 };
 
