@@ -81,39 +81,41 @@ const PropertyPage: React.FC = () => {
     return new Date(nextVisitA.appointment).getTime() - new Date(nextVisitB.appointment).getTime();
   });
 
-  const counterColumn = (title: string, field: keyof Property): ColumnsType<Property>[number] => ({
-    title,
-    key: field as string,
-    render: (_, property) => {
-      const value = Number(property[field] ?? 0);
-      return (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontWeight: 500 }}>{value}</span>
-          <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 8 }}>
-            <Tooltip title={`Aumentar ${title.toLowerCase()}`}>
-              <Button
-                icon={<UpOutlined />}
-                onClick={() => changeCounter(property, field, 1)}
-                size="small"
-                type="default"
-                style={{ padding: '0 6px', height: 15, width: 15 }}
-              />
-            </Tooltip>
-            <Tooltip title={`Disminuir ${title.toLowerCase()}`}>
-              <Button
-                icon={<DownOutlined />}
-                onClick={() => changeCounter(property, field, -1)}
-                size="small"
-                type="default"
-                style={{ padding: '0 6px', height: 15, width: 15 }}
-                disabled={value === 0}
-              />
-            </Tooltip>
-          </div>
+const counterColumn = (title: string, field: keyof Property): ColumnsType<Property>[number] => ({
+  title,
+  key: field as string,
+  align: 'center',
+  render: (_, property) => {
+    const value = Number(property[field] ?? 0);
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <span style={{ fontWeight: 500 }}>{value}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 8 }}>
+          <Tooltip title={`Aumentar ${title.toLowerCase()}`}>
+            <Button
+              icon={<UpOutlined />}
+              onClick={() => changeCounter(property, field, 1)}
+              size="small"
+              type="default"
+              style={{ padding: 0, height: 16, width: 16, lineHeight: 1 }}
+            />
+          </Tooltip>
+          <Tooltip title={`Disminuir ${title.toLowerCase()}`}>
+            <Button
+              icon={<DownOutlined />}
+              onClick={() => changeCounter(property, field, -1)}
+              size="small"
+              type="default"
+              disabled={value === 0}
+              style={{ padding: 0, height: 16, width: 16, lineHeight: 1 }}
+            />
+          </Tooltip>
         </div>
-      );
-    },
-  });
+      </div>
+    );
+  },
+});
+
 
   const columns: ColumnsType<Property> = [
     {

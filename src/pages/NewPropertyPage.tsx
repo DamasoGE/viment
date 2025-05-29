@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Form, Input, Button, Select, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import useSeller from '../hooks/useSeller';
 import useProperty from '../hooks/useProperty';
+import CenteredSpin from '../components/CenteredSpin';
 
 const { Option } = Select;
 
 const NewPropertyPage: React.FC = () => {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { sellers } = useSeller();
+  const { sellers, fetchSellers, loading } = useSeller();
   const { createProperty } = useProperty();
 
+  useEffect(() => {
+    const init = async () => {
+      await fetchSellers();
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onFinish = async (values: { address: string; sellerId: string }) => {
-    setLoading(true);
     try {
       await createProperty(values.address, values.sellerId);
       message.success('Propiedad creada con éxito');
@@ -22,10 +29,12 @@ const NewPropertyPage: React.FC = () => {
     } catch (error) {
       message.error('Error al crear la propiedad');
       console.error('Error:', error);
-    } finally {
-      setLoading(false);
     }
   };
+
+  if (loading) {
+    return <CenteredSpin tipText="Cargando Vendedores..." />;
+  }
 
   return (
     <>

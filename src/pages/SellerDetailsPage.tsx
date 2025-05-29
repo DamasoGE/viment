@@ -6,11 +6,11 @@ import {
   Divider,
   Result,
   Button,
-  List,
   message,
   Popconfirm,
   Switch,
 } from 'antd';
+import { HomeOutlined } from '@ant-design/icons';
 import useSeller, { Seller } from '../hooks/useSeller';
 import { HeaderPageContainer } from '../styles/theme';
 import CenteredSpin from '../components/CenteredSpin';
@@ -23,15 +23,15 @@ const SellerDetailsPage: React.FC = () => {
   const [seller, setSeller] = useState<Seller | null>(null);
 
   useEffect(() => {
-      const aux = async () => {
-        if (id) {
-          const sellerfetch = await fetchSellerById(id);
-          setSeller(sellerfetch);
-        }
-      };
-      aux();
+    const aux = async () => {
+      if (id) {
+        const sellerfetch = await fetchSellerById(id);
+        setSeller(sellerfetch);
+      }
+    };
+    aux();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [id]);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -60,9 +60,7 @@ const SellerDetailsPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <CenteredSpin tipText='Cargando Vendedor'/>
-    );
+    return <CenteredSpin tipText="Cargando Vendedor" />;
   }
 
   if (!seller) {
@@ -120,26 +118,39 @@ const SellerDetailsPage: React.FC = () => {
         {seller.properties?.length === 0 ? (
           <p>Este vendedor no tiene propiedades registradas.</p>
         ) : (
-          <List
-            itemLayout="horizontal"
-            dataSource={seller.properties}
-            renderItem={(property) => (
-              <List.Item
-                actions={[
-                  <Link to={`/property/${property._id}`} key="ver">
-                    Ver Detalles
-                  </Link>,
-                ]}
-              >
-                <List.Item.Meta
-                  title={property.address}
-                  description={`Veces ofrecida: ${property.timesOffered}`}
-                />
-              </List.Item>
-            )}
-          />
-        )}
-      </Card>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '16px',
+              justifyContent: 'start',
+            }}
+          >
+            {seller.properties?.map((property) => (
+          <Card
+            key={property._id}
+            hoverable
+            onMouseEnter={(e) => {
+              const card = e.currentTarget as HTMLDivElement;
+              card.style.boxShadow = "0 6px 20px rgba(0,0,0,0.2)";
+            }}
+            onMouseLeave={(e) => {
+              const card = e.currentTarget as HTMLDivElement;
+              card.style.boxShadow = "none";
+            }}
+            onClick={() => navigate(`/property/${property._id}`)}
+            styles={{ body: { display: "flex", alignItems: "center", gap: 12 }}}
+            style={{ backgroundColor: "#fafafa" }}
+          >
+          <HomeOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+          <div>
+            <div style={{ fontWeight: 'bold' }}>{property.address}</div>
+          </div>
+        </Card>
+              ))}
+            </div>
+          )}
+        </Card>
 
       <Divider />
 

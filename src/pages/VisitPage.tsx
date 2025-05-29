@@ -154,14 +154,14 @@ const VisitPage: React.FC = () => {
             placeholder="Desde"
             value={startDate}
             onChange={setStartDate}
-            style={{ height: 40 }}
+            style={{ height: 40, width: '200px' }}
           />
 
           <DatePicker
             placeholder="Hasta"
             value={endDate}
             onChange={setEndDate}
-            style={{ height: 40 }}
+            style={{ height: 40, width: '200px' }}
           />
         </ContainerFlex>
 

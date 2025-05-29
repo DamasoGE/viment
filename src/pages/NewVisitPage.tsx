@@ -1,24 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Button, DatePicker, Select, message, Alert } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import useProperty from '../hooks/useProperty';
 import useVisit from '../hooks/useVisit'; 
+import CenteredSpin from '../components/CenteredSpin';
+import dayjs from 'dayjs';
+
 
 const { Option } = Select;
 
 const NewVisitPage: React.FC = () => {
-  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const { properties } = useProperty();
+  const { properties, loading, fetchProperties } = useProperty();
   const { createVisit } = useVisit();
 
-  const onFinish = async (values: { appointment: string; propertyId: string }) => {
-    setLoading(true);
+  useEffect(() => {
+    const initProperties = async () => {
+      await fetchProperties();
+    };
+    initProperties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
+  const onFinish = async (values: { appointment: dayjs.Dayjs; propertyId: string }) => {
     setErrorMsg(null);
 
-    const appointmentDate = new Date(values.appointment);
+    // appointment viene como moment object, convertir a Date
+    const appointmentDate = values.appointment.toDate();
 
     try {
       await createVisit(appointmentDate, values.propertyId);
@@ -30,10 +40,14 @@ const NewVisitPage: React.FC = () => {
       } else {
         setErrorMsg('Error desconocido al crear la visita');
       }
-    } finally {
-      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <CenteredSpin tipText='Cargando Propiedades...' />
+    );
+  }
 
   return (
     <>
@@ -48,7 +62,6 @@ const NewVisitPage: React.FC = () => {
             style={{ marginBottom: 16, width: "300px",  textAlign: "center" }}
           />
         </div>
-
       )}
 
       <Form
@@ -77,8 +90,8 @@ const NewVisitPage: React.FC = () => {
           rules={[{ required: true, message: 'Por favor ingresa la fecha de la cita!' }]}
         >
           <DatePicker
-            showTime
-            format="YYYY-MM-DD HH:mm:ss"
+            showTime={{ format: 'HH:mm' }}
+            format="YYYY-MM-DD HH:mm"
             placeholder="Selecciona la fecha y hora"
             style={{ width: '100%' }}
           />
@@ -95,7 +108,7 @@ const NewVisitPage: React.FC = () => {
           </Button>
         </Form.Item>
       </Form>
-    </>
+      </>
   );
 };
 

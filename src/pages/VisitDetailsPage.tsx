@@ -23,26 +23,46 @@ import CenteredSpin from '../components/CenteredSpin';
 const VisitDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { loading: loading, fetchVisitById, updateVisit, deleteVisit } = useVisit();
-  const [visit, setVisit] = useState<Visit | null>()
+  const { loading, fetchVisitById, updateVisit, deleteVisit } = useVisit();
+  const [visit, setVisit] = useState<Visit | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-    useEffect(() => {
-        const aux = async () => {
-          if (id) {
-            const visitFetch = await fetchVisitById(id);
-            setVisit(visitFetch);
-          }
-        };
-        aux();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  useEffect(() => {
+    const aux = async () => {
+      if (id) {
+        const visitFetch = await fetchVisitById(id);
+        setVisit(visitFetch);
+      }
+    };
+    aux();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleStatusChange = async (visitId: string, status: string) => {
     try {
       await updateVisit(visitId, "status", status);
+      setVisit((prev) =>
+        prev ? { ...prev, status: status as Visit['status'] } : prev
+      );
+      message.success('Estado actualizado correctamente');
     } catch (error) {
       console.error('Error al cambiar estado:', error);
+      message.error('No se pudo actualizar el estado');
+    }
+  };
+
+  const handleCommentChange = async (values: { comment: string }) => {
+    if (!visit) return;
+    try {
+      setSubmitting(true);
+      await updateVisit(visit._id, 'comment', values.comment);
+      setVisit((prev) => prev ? { ...prev, comment: values.comment } : prev);
+      message.success('Comentario actualizado correctamente');
+    } catch (error) {
+      console.error('Error al actualizar comentario:', error);
+      message.error('No se pudo actualizar el comentario');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -58,8 +78,8 @@ const VisitDetailsPage: React.FC = () => {
   };
 
   const menuItems = Object.entries(statusTextMap).map(([key, label]) => ({
-  key,
-  label,
+    key,
+    label,
   }));
 
   const menu = (
@@ -69,14 +89,12 @@ const VisitDetailsPage: React.FC = () => {
           handleStatusChange(visit._id, key);
         }
       }}
-    items={menuItems}
+      items={menuItems}
     />
   );
 
   if (loading) {
-    return (
-      <CenteredSpin tipText='Cargando Visita...'/>
-    );
+    return <CenteredSpin tipText="Cargando Visita..." />;
   }
 
   if (!visit) {
@@ -131,7 +149,7 @@ const VisitDetailsPage: React.FC = () => {
               {statusTextMap[visit.status]}
             </Tag>
             <Dropdown overlay={menu} trigger={['click']}>
-              <EditOutlined />
+              <EditOutlined style={{ cursor: 'pointer', marginLeft: 8 }} />
             </Dropdown>
           </Descriptions.Item>
         </Descriptions>
@@ -141,29 +159,22 @@ const VisitDetailsPage: React.FC = () => {
 
       <Card title="Comentario">
         {visit.comment ? (
-          <p><strong>Comentario actual:</strong> {visit.comment}</p>
+          <p>
+            <strong>Comentario actual:</strong> {visit.comment}
+          </p>
         ) : (
           <p style={{ color: '#888' }}>No hay comentario aún.</p>
         )}
 
         <Form
           layout="vertical"
-          onFinish={async (values) => {
-            try {
-              setSubmitting(true);
-              await updateVisit(id!, 'comment', values.comment);
-            } catch (error) {
-              console.error('Error al actualizar comentario:', error);
-            } finally {
-              setSubmitting(false);
-            }
-          }}
+          onFinish={handleCommentChange}
           initialValues={{ comment: visit.comment || '' }}
         >
           <Form.Item
             label="Editar comentario"
             name="comment"
-            rules={[{ message: 'El comentario no puede estar vacío.' }]}
+            rules={[{ required: true, message: 'El comentario no puede estar vacío.' }]}
           >
             <Input.TextArea rows={3} />
           </Form.Item>
