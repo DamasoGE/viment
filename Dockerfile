@@ -1,5 +1,5 @@
 #Imagen de partida
-FROM node:latest
+FROM node:23-alpine
 
 WORKDIR /app
 # Instalar dependencias
