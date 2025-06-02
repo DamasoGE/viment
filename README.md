@@ -1,54 +1,44 @@
-# React + TypeScript + Vite
+# Aplicación FRONTEND Viment
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Esta aplicación está hecha sobre el empaquetador VITE, que proporciona una forma directa y sencilla de poner a funcionar un servidor para Frontend.
 
-Currently, two official plugins are available:
+Para este proyecto además utilizaremos **Typescript** que es una versión de Javascript tipada. Esto obliga a ser muy cuidadosos con la definición de variables y funciones para asegurar que no haya inconsistencias de tipado.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Herramienta que se utiliza para levantarlo:
+- **NodeJS**: es un entorno en tiempo de ejecución multiplataforma, de código abierto, para la capa del servidor.
 
-## Expanding the ESLint configuration
+### Librerías externas utilizadas
+Las pueden encontrar en el archivo **LIBRARIES** en la misma carpeta que este README.
+Enlace al documento: [README_LIBRARIES.md](./README_LIBRARIES.md)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+De todas formas hablaré a continuación de las librerías más importantes utilizadas en el proyecto.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### REACT
+
+Se ha utilizado React para construir el proyecto. REACT es un framework para trabajar en javascript basado en componentes. Permite la reutilización de código por medio de bloques de código renderizables llamados componentes y mejora la escalabilidad de los proyectos.
+
+### ANT DESIGN
+
+Para tener un estilo homogéneo y empresarial se decidió el uso de Ant Design. Es una librería enorme de componentes de React listos para utilizar y mantenter un estilo cohesionado entre sí.
+
+La propia página de Ant Design tiene un apartado enorme dedicado a enseñar cómo se debería hacer un buen diseño de Frontend, mientras que por otro lado tiene la documentación de todos los componentes con ejemplos.
+
+### STYLED COMPONENTS
+
+Para el estilado de la aplicación he utilizado Styled Components que es una librería que permite crear, a partir de componentes ya creados, componentes estilados que puedes reemplazar por el componente sin estilizar. Esto va muy de la mano con la filosofía de REACT.
+
+### Uso de la aplicación
+
+Esta aplicación es un BACKOFFICE. Permite la lectura, inserción, modificación y eliminación de distintos documentos de la base de datos controlado por el backend.
+
+Se ha intentado mejorar la navegación de la pagina buscando la forma de minimizar los recorridos de ratón para poder realizar más acciones en menos tiempo.
+
+### Despliegue local de Viment
+
+Para desplegar Viment de forma local se puede realizar mediante:
+```
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+### Variables de entorno
+-   **VITE_BACKEND_API**: Dirección web donde se encuentra alojado el Backend
