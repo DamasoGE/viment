@@ -146,6 +146,30 @@ const useAsesor = () => {
     }
   };
 
+  const changePassword = async (id: string, newPassword: string): Promise<boolean> => {
+  try {
+    const res = await fetch(`${api}/asesor/${id}/password`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password: newPassword }),
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error("Error al cambiar la contraseña");
+
+    const data = await res.json();
+    console.log("Contraseña actualizada:", data);
+    return true;
+  } catch (err) {
+    console.error("Error al cambiar la contraseña:", err);
+    setError("Error al cambiar la contraseña");
+    return false;
+  }
+};
+
+
   return {
     user,
     loading,
@@ -157,6 +181,7 @@ const useAsesor = () => {
     createAsesor,
     updateAsesor,
     deleteAsesor,
+    changePassword
   };
 };
 

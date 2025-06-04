@@ -1,5 +1,16 @@
 # Aplicación FRONTEND Viment
 
+- [Aplicación FRONTEND Viment](#aplicación-frontend-viment)
+    - [Introduccion](#introduccion)
+    - [Librerías externas utilizadas](#librerías-externas-utilizadas)
+    - [REACT](#react)
+    - [ANT DESIGN](#ant-design)
+    - [STYLED COMPONENTS](#styled-components)
+    - [Uso de la aplicación](#uso-de-la-aplicación)
+    - [Despliegue local de Viment](#despliegue-local-de-viment)
+    - [Variables de entorno](#variables-de-entorno)
+
+### Introduccion
 Esta aplicación está hecha sobre el empaquetador VITE, que proporciona una forma directa y sencilla de poner a funcionar un servidor para Frontend.
 
 Para este proyecto además utilizaremos **Typescript** que es una versión de Javascript tipada. Esto obliga a ser muy cuidadosos con la definición de variables y funciones para asegurar que no haya inconsistencias de tipado.

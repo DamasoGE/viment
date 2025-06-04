@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import useAsesor from '../hooks/useAsesor';
@@ -6,36 +6,49 @@ import useAsesor from '../hooks/useAsesor';
 const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { user } = useAsesor();
+  const { user, fetchProfile } = useAsesor();
   const navigate = useNavigate();
 
-  const { updateAsesor } = useAsesor();
+  const { changePassword } = useAsesor();
 
-  const onFinish = async (values: { newPassword: string; confirmPassword: string }) => {
+
+useEffect(() => {
+  const fetchData = async () => {
+    await fetchProfile();
+  };
+
+  fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+  
+
+    const onFinish = async (values: { newPassword: string; confirmPassword: string }) => {
     if (values.newPassword !== values.confirmPassword) {
-      setErrorMessage('Las contraseñas no coinciden');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     setErrorMessage(null);
     setLoading(true);
 
-    try {
-        if (user?._id) {
-            await updateAsesor(user._id, { password: values.newPassword });
-          } else {
-            message.error('No se encontró el usuario');
-          }
-      message.success('Contraseña cambiada con éxito');
-      navigate('/');
-    } catch (error) {
-      message.error('Error al cambiar la contraseña');
-      console.error('Error:', error);
-    } finally {
+    if (!user?._id) {
+      message.error('User not found');
       setLoading(false);
+      return;
     }
-  };
 
+    const success = await changePassword(user._id, values.newPassword);
+
+    if (success) {
+      message.success('Password changed successfully');
+      navigate('/');
+    } else {
+      message.error('Failed to update password');
+    }
+
+    setLoading(false);
+  };
+  
   return (
     <>
       <h2 style={{ textAlign: 'center' }}>Cambiar Contraseña</h2>
